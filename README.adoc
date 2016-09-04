@@ -1,0 +1,23 @@
+= Mg Settings
+
+Parse config files.
+
+image:https://img.shields.io/travis/antoyo/mg-settings.svg[link="https://travis-ci.org/antoyo/mg-settings"]
+image:https://img.shields.io/coveralls/antoyo/mg-settings.svg[link="https://coveralls.io/github/antoyo/mg-settings"]
+image:https://img.shields.io/crates/v/mg-settings.svg[link="https://crates.io/crates/mg-settings"]
+image:https://img.shields.io/badge/rust-documentation-blue.svg[link="https://antoyo.github.io/mg-settings/mg-settings/"]
+image:https://img.shields.io/crates/d/mg-settings.svg[link="https://crates.io/crates/mg-settings"]
+image:https://img.shields.io/crates/l/mg-settings.svg[link="LICENSE"]
+
+== Installation
+
+Add the following line to the dependencies section of your `Cargo.toml`:
+
+[source,bash]
+----
+mg-settings = "0.0.1"
+----
+
+== Usage
+
+Call the `parse` function on the input to get the commands from the config file.

@@ -1,0 +1,16 @@
+[package]
+name = "mg-settings"
+version = "0.0.1"
+authors = ["Antoni Boucher <bouanto@zoho.com>"]
+description = "Parse config files."
+license = "MIT"
+repository = "https://github.com/antoyo/mg-settings"
+documentation = "https://antoyo.github.io/mg-settings/mg-settings/"
+
+[features]
+nightly = []
+
+[dependencies]
+
+[package.metadata.release]
+upload-doc = true
