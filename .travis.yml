@@ -23,7 +23,7 @@ script:
       travis-cargo build &&
       travis-cargo test
 after_success:
-  - tree $HOME/.local/bin
+  - ls -R $HOME/.local/bin
   - kcov/build/src/kcov --verify --coveralls-id=$TRAVIS_JOB_ID --exclude-pattern=/.cargo target/kcov target/debug/mg_settings-*
   #- travis-cargo coveralls --no-sudo --verify
 
