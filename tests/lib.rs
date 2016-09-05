@@ -48,6 +48,9 @@ fn parser_errors() {
     assert_eq!(parse_error("set 5 5"), "unexpected 5, expecting identifier on line 1, column 5".to_string());
     assert_eq!(parse_error("set  5 5"), "unexpected 5, expecting identifier on line 1, column 6".to_string());
     assert_eq!(parse_error("5"), "unexpected 5, expecting command or comment on line 1, column 1".to_string());
+    assert_eq!(parse_error(" ste option1 = 42"), "unexpected ste, expecting command or comment on line 1, column 2".to_string());
+    assert_eq!(parse_error("set option1 < 42"), "unexpected <, expecting = on line 1, column 13".to_string());
+    assert_eq!(parse_error(" set option1 < 42"), "unexpected <, expecting = on line 1, column 14".to_string());
 }
 
 #[test]

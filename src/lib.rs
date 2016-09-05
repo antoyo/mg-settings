@@ -26,7 +26,7 @@
 //! Call the `parse` function on the input.
 
 /*
- * TODO: Add map command.
+ * TODO: Add map command. A map command is a command that ends with map and the prefix is the mode.
  * TODO: Add unmap command.
  * TODO: Add include command.
  * TODO: Add array type.
@@ -99,8 +99,11 @@ fn line(line: &str, line_num: u32) -> Result<Option<Command>> {
         }
         else {
             match word {
-                "set" => set_command(&line[4..], line_num, 5).map(Some), // TODO: column
-                _ => Err(Box::new(Error::new(word.to_string(), "command or comment".to_string(), Pos::new(line_num, 1)))), // TODO: column
+                "set" => set_command(&line[4..], line_num, 5).map(Some),
+                _ => {
+                    let index = line.find(word).unwrap() as u32 + 1; // NOTE: the word is in the line, hence unwrap.
+                    Err(Box::new(Error::new(word.to_string(), "command or comment".to_string(), Pos::new(line_num, index))))
+                },
             }
         }
     }
@@ -121,7 +124,8 @@ fn set_command(line: &str, line_num: u32, column_num: u32) -> Result<Command> {
             Ok(Set(identifier.to_string(), try!(value(rest))))
         }
         else {
-            Err(Box::new(Error::new(operator.to_string(), "=".to_string(), Pos::new(line_num, column_num + 1)))) // TODO: column
+            let index = line.find(operator).unwrap() as u32; // NOTE: the operator is in the line, hence unwrap.
+            Err(Box::new(Error::new(operator.to_string(), "=".to_string(), Pos::new(line_num, column_num + index))))
         }
     }
     else {
