@@ -19,51 +19,10 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use std::fmt::{Display, Error, Formatter};
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct Pos {
-    pub column: usize,
-    pub line: usize,
-}
-
-impl Pos {
-    pub fn new(line: usize, column: usize) -> Pos {
-        Pos {
-            column: column,
-            line: line,
-        }
-    }
-
-    pub fn newline(&mut self) {
-        self.line += 1;
-        self.column = 1;
-    }
-}
-
-impl Display for Pos {
-    fn fmt(&self, formatter: &mut Formatter) -> Result<(), Error> {
-        write!(formatter, "line {}, column {}", self.line, self.column)
-    }
-}
-
-#[derive(Debug)]
-pub struct WithPos<T> {
-    pub node: T,
-    pub pos: Pos,
-}
-
-impl<T> WithPos<T> {
-    pub fn new(node: T, pos: Pos) -> WithPos<T> {
-        WithPos {
-            node: node,
-            pos: pos,
-        }
-    }
-}
-
-impl<T: Display> Display for WithPos<T> {
-    fn fmt(&self, formatter: &mut Formatter) -> Result<(), Error> {
-        write!(formatter, "{}", self.node)
-    }
+macro_rules! hash {
+    (<$key_type:ty, $value_type:ty> $($key:expr => $value:expr),* $(,)*) => {{
+        let mut hashmap: HashMap<$key_type, $value_type> = HashMap::new();
+        $(hashmap.insert($key, $value);)*
+        hashmap
+    }};
 }

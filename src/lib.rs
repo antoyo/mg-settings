@@ -35,9 +35,12 @@
 #![warn(missing_docs)]
 
 pub mod error;
+#[macro_use]
+mod macros;
 #[doc(hidden)]
 pub mod position;
 
+use std::collections::HashMap;
 use std::io::BufRead;
 
 use error::Error;
@@ -49,6 +52,8 @@ use Value::*;
 /// The `Command` enum represents a command from a config file.
 #[derive(Debug, PartialEq)]
 pub enum Command {
+    /// An include command includes another configuration file.
+    Include(String),
     /// A set command sets a value to an option.
     Set(String, Value),
 }
@@ -74,7 +79,7 @@ pub enum Value {
 pub fn parse<R: BufRead>(input: R) -> Result<Vec<Command>> {
     let mut commands = vec![];
     for (line_num, input_line) in input.lines().enumerate() {
-        if let Some(command) = try!(line(&try!(input_line), line_num as u32 + 1)) {
+        if let Some(command) = try!(line(&try!(input_line), line_num + 1)) {
             commands.push(command);
         }
     }
@@ -91,20 +96,56 @@ fn check_ident(string: String, pos: &Pos) -> Result<String> {
     Err(Box::new(Error::new(string, "identifier".to_string(), pos.clone())))
 }
 
+/// Parse an include command.
+fn include_command(line: &str, line_num: usize, column_num: usize) -> Result<Command> {
+    if let Some(word) = word(line) {
+        Ok(Include(word.to_string()))
+    }
+    else {
+        Err(Box::new(Error::new(
+            "<eof>".to_string(),
+            "filename".to_string(),
+            Pos::new(line_num, column_num)
+        )))
+    }
+}
+
 /// Parse a line.
-fn line(line: &str, line_num: u32) -> Result<Option<Command>> {
+fn line(line: &str, line_num: usize) -> Result<Option<Command>> {
+    let include_func = &include_command;
+    let set_func = &set_command;
+    let commands =
+        hash! {<&str, &Fn(&str, usize, usize) -> Result<Command> >
+            "include" => include_func,
+            "set" => set_func,
+        };
+
     if let Some(word) = word(line) {
         if word.starts_with('#') {
             Ok(None)
         }
-        else {
-            match word {
-                "set" => set_command(&line[4..], line_num, 5).map(Some),
-                _ => {
-                    let index = line.find(word).unwrap() as u32 + 1; // NOTE: the word is in the line, hence unwrap.
-                    Err(Box::new(Error::new(word.to_string(), "command or comment".to_string(), Pos::new(line_num, index))))
-                },
+        else if let Some(command) = commands.get(word) {
+            let start_index = word.len() + 1;
+            let column = start_index + 1;
+            if line.len() > start_index {
+                command(&line[start_index..], line_num, column).map(Some)
             }
+            else {
+                Err(Box::new(Error::new(
+                    "<eof>".to_string(),
+                    "command arguments".to_string(),
+                    Pos::new(line_num, start_index)
+                )))
+            }
+        }
+        else {
+            // NOTE: the word is in the line, hence unwrap.
+            let index = line.find(word).unwrap() + 1;
+            Err(Box::new(Error::new(
+                word.to_string(),
+                "command or comment".to_string(),
+                Pos::new(line_num, index)
+            )))
         }
     }
     else {
@@ -113,39 +154,56 @@ fn line(line: &str, line_num: u32) -> Result<Option<Command>> {
 }
 
 /// Parse a set command.
-fn set_command(line: &str, line_num: u32, column_num: u32) -> Result<Command> {
+fn set_command(line: &str, line_num: usize, column_num: usize) -> Result<Command> {
     if let Some(words) = words(line, 2) {
-        let index = line.find(words[0]).unwrap() as u32; // NOTE: the line contains the word, hence unwrap.
+        // NOTE: the line contains the word, hence unwrap.
+        let index = line.find(words[0]).unwrap();
         let identifier = try!(check_ident(words[0].to_string(), &Pos::new(line_num, column_num + index)));
+
         let operator = words[1];
+        // NOTE: the operator is in the line, hence unwrap.
+        let operator_index = line.find(operator).unwrap();
         if operator == "=" {
-            let index = line.find('=').unwrap(); // NOTE: the line contains an =, hence unwrap.
-            let rest = &line[index + 1..];
-            Ok(Set(identifier.to_string(), try!(value(rest))))
+            let rest = &line[operator_index + 1..];
+            Ok(Set(identifier.to_string(), try!(value(rest, line_num, column_num + operator_index + 1))))
         }
         else {
-            let index = line.find(operator).unwrap() as u32; // NOTE: the operator is in the line, hence unwrap.
-            Err(Box::new(Error::new(operator.to_string(), "=".to_string(), Pos::new(line_num, column_num + index))))
+            Err(Box::new(Error::new(
+                operator.to_string(),
+                "=".to_string(),
+                Pos::new(line_num, column_num + operator_index)
+            )))
         }
     }
     else {
-        Err(Box::new(Error::new("<eof>".to_string(), "identifier".to_string(), Pos::new(line_num, column_num))))
+        Err(Box::new(Error::new(
+            "<eof>".to_string(),
+            "=".to_string(),
+            Pos::new(line_num, column_num + line.len())
+        )))
     }
 }
 
 /// Parse a value.
-fn value(input: &str) -> Result<Value> {
+fn value(input: &str, line_num: usize, column_num: usize) -> Result<Value> {
     let string: String = input.chars().take_while(|&character| character != '#').collect();
     let string = string.trim();
     match string {
+        "" => Err(Box::new(Error::new(
+                  "<eof>".to_string(),
+                  "value".to_string(),
+                  Pos::new(line_num, column_num + string.len())
+              ))),
         "true" => Ok(Bool(true)),
         "false" => Ok(Bool(false)),
         _ => {
             if string.chars().all(|character| character.is_digit(10)) {
-                Ok(Int(string.parse().unwrap())) // NOTE: the string only contains digit, hence unwrap.
+                // NOTE: the string only contains digit, hence unwrap.
+                Ok(Int(string.parse().unwrap()))
             }
             else if string.chars().all(|character| character.is_digit(10) || character == '.') {
-                Ok(Float(string.parse().unwrap())) // NOTE: the string only contains digit or dot, hence unwrap.
+                // NOTE: the string only contains digit or dot, hence unwrap.
+                Ok(Float(string.parse().unwrap()))
             }
             else {
                 Ok(Str(input.trim().to_string()))
