@@ -21,6 +21,9 @@
 
 //! Parse error type.
 
+use std::error;
+use std::fmt::{self, Display, Formatter};
+
 use position::Pos;
 
 /// Struct which holds information about an error at a specific position.
@@ -39,5 +42,17 @@ impl Error {
             pos: pos,
             unexpected: unexpected,
         }
+    }
+}
+
+impl Display for Error {
+    fn fmt(&self, formatter: &mut Formatter) -> Result<(), fmt::Error> {
+        write!(formatter, "unexpected {}, expecting {} on {}", self.unexpected, self.expected, self.pos)
+    }
+}
+
+impl error::Error for Error {
+    fn description(&self) -> &str {
+        "parse error"
     }
 }

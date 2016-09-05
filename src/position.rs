@@ -41,6 +41,12 @@ impl Pos {
     }
 }
 
+impl Display for Pos {
+    fn fmt(&self, formatter: &mut Formatter) -> Result<(), Error> {
+        write!(formatter, "line {}, column {}", self.line, self.column)
+    }
+}
+
 #[derive(Debug)]
 pub struct WithPos<T> {
     pub node: T,

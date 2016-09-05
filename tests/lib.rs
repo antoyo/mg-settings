@@ -21,50 +21,52 @@
 
 extern crate mg_settings;
 
-use mg_settings::error::Error;
 use mg_settings::parse;
-use mg_settings::Command::Set;
-use mg_settings::position::Pos;
+use mg_settings::Command::{self, Set};
 use mg_settings::Value::{Bool, Float, Int, Str};
 
 #[test]
 fn comments() {
-    assert_eq!(parse("# Comment."), Ok(vec![]));
-    assert_eq!(parse("set option1 5 # Comment."), Ok(vec![Set("option1".into(), Int(5))]));
+    assert_eq!(parse_string("# Comment."), vec![]);
+    assert_eq!(parse_string("set option1 = 5 # Comment."), vec![Set("option1".to_string(), Int(5))]);
 }
 
 #[test]
 fn lexer_errors() {
-    assert_eq!(parse("$ Comment."), Err(Error::new("$".into(), "identifier, number, boolean, string or comment".into(), Pos::new(1, 1))));
+    assert_eq!(parse_error("$ Comment."), "unexpected $, expecting command or comment on line 1, column 1".to_string());
 }
 
 #[test]
 fn newlines() {
-    assert_eq!(parse("\n$ Comment."), Err(Error::new("$".into(), "identifier, number, boolean, string or comment".into(), Pos::new(2, 1))));
-    assert_eq!(parse("\r\n$ Comment."), Err(Error::new("$".into(), "identifier, number, boolean, string or comment".into(), Pos::new(2, 1))));
-    assert_eq!(parse("\r$ Comment."), Err(Error::new("$".into(), "identifier, number, boolean, string or comment".into(), Pos::new(2, 1))));
+    assert_eq!(parse_error("\n$ Comment."), "unexpected $, expecting command or comment on line 2, column 1".to_string());
+    assert_eq!(parse_error("\r\n$ Comment."), "unexpected $, expecting command or comment on line 2, column 1".to_string());
+    //assert_eq!(parse_error("\r$ Comment."), "unexpected $, expecting command or comment on line 2, column 1".to_string());
 }
 
 #[test]
 fn parser_errors() {
-    assert_eq!(parse("set 5 5"), Err(Error::new("5".into(), "identifier".into(), Pos::new(1, 5))));
-    assert_eq!(parse("set option set"), Err(Error::new("set".into(), "value".into(), Pos::new(1, 12))));
-    assert_eq!(parse("5"), Err(Error::new("5".into(), "command or comment".into(), Pos::new(1, 1))));
-    assert_eq!(parse("set true 5"), Err(Error::new("true".into(), "identifier".into(), Pos::new(1, 5))));
-    assert_eq!(parse("set option\\ with\\ spaces 5"), Err(Error::new("option with spaces".into(), "identifier".into(), Pos::new(1, 5))));
-    assert_eq!(parse("set option1 \"value with spaces"), Err(Error::new("eof".into(), "\"".into(), Pos::new(1, 30))));
-    assert_eq!(parse("set option1 \"value with spaces\n"), Err(Error::new("\n".into(), "\"".into(), Pos::new(1, 30))));
-    assert_eq!(parse("set \"option\" 5"), Err(Error::new("option".into(), "identifier".into(), Pos::new(1, 5))));
+    assert_eq!(parse_error("set 5 5"), "unexpected 5, expecting identifier on line 1, column 5".to_string());
+    assert_eq!(parse_error("set  5 5"), "unexpected 5, expecting identifier on line 1, column 6".to_string());
+    assert_eq!(parse_error("5"), "unexpected 5, expecting command or comment on line 1, column 1".to_string());
 }
 
 #[test]
 fn set_command() {
-    assert_eq!(parse("set option1 42"), Ok(vec![Set("option1".into(), Int(42))]));
-    assert_eq!(parse("set option1 3.141592"), Ok(vec![Set("option1".into(), Float(3.141592))]));
-    assert_eq!(parse("set option1 false"), Ok(vec![Set("option1".into(), Bool(false))]));
-    assert_eq!(parse("set option1 true"), Ok(vec![Set("option1".into(), Bool(true))]));
-    assert_eq!(parse("set option1 value"), Ok(vec![Set("option1".into(), Str("value".into()))]));
-    assert_eq!(parse("set option1 value\\ with\\ spaces"), Ok(vec![Set("option1".into(), Str("value with spaces".into()))]));
-    assert_eq!(parse("set option1 \"value with spaces\""), Ok(vec![Set("option1".into(), Str("value with spaces".into()))]));
-    assert_eq!(parse("set option1 42\nset option2 3.141592"), Ok(vec![Set("option1".into(), Int(42)), Set("option2".into(), Float(3.141592))]));
+    assert_eq!(parse_string("set option1 = 42"), vec![Set("option1".to_string(), Int(42))]);
+    assert_eq!(parse_string("set option1 = 3.141592"), vec![Set("option1".to_string(), Float(3.141592))]);
+    assert_eq!(parse_string("set option1 = false"), vec![Set("option1".to_string(), Bool(false))]);
+    assert_eq!(parse_string("set option1 = true"), vec![Set("option1".to_string(), Bool(true))]);
+    assert_eq!(parse_string("set option1 = value"), vec![Set("option1".to_string(), Str("value".to_string()))]);
+    assert_eq!(parse_string("set option1 = value with spaces"), vec![Set("option1".to_string(), Str("value with spaces".to_string()))]);
+    assert_eq!(parse_string("set option1 = 42\nset option2 = 3.141592"), vec![Set("option1".to_string(), Int(42)), Set("option2".to_string(), Float(3.141592))]);
+    assert_eq!(parse_string("set option1 = 42\nset option2 = 3.141592\n"), vec![Set("option1".to_string(), Int(42)), Set("option2".to_string(), Float(3.141592))]);
+    assert_eq!(parse_string("set option1 = 42\n\nset option2 = 3.141592\n"), vec![Set("option1".to_string(), Int(42)), Set("option2".to_string(), Float(3.141592))]);
+}
+
+fn parse_error(input: &str) -> String {
+    parse(input.as_bytes()).unwrap_err().to_string()
+}
+
+fn parse_string(input: &str) -> Vec<Command> {
+    parse(input.as_bytes()).unwrap()
 }
