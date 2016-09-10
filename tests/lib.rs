@@ -22,7 +22,7 @@
 extern crate mg_settings;
 
 use mg_settings::{Config, parse, parse_with_config};
-use mg_settings::Command::{self, Include, Map, Set};
+use mg_settings::Command::{self, Include, Map, Set, Unmap};
 use mg_settings::key::Key::{Char, Control, Down, Enter, Escape, F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, Left, Right, Space, Tab, Up};
 use mg_settings::Value::{Bool, Float, Int, Str};
 
@@ -66,6 +66,8 @@ fn parser_errors() {
     assert_eq!(parse_error_with_config("nmap <C-TE> :open"), "unexpected C-TE, expecting special key on line 1, column 7".to_string());
     assert_eq!(parse_error_with_config("nmap <Test> :open"), "unexpected Test, expecting special key on line 1, column 7".to_string());
     assert_eq!(parse_error_with_config("mmap o :open"), "unexpected mmap, expecting command or comment on line 1, column 1".to_string());
+    assert_eq!(parse_error_with_config("nunmap <F1> :help"), "unexpected :help, expecting <end of line> on line 1, column 13".to_string());
+    assert_eq!(parse_error_with_config("include config my-other-config"), "unexpected my-other-config, expecting <end of line> on line 1, column 16".to_string());
 }
 
 #[test]
@@ -115,6 +117,12 @@ fn set_command() {
     assert_eq!(parse_string("set option1 = 42\nset option2 = 3.141592"), vec![Set("option1".to_string(), Int(42)), Set("option2".to_string(), Float(3.141592))]);
     assert_eq!(parse_string("set option1 = 42\nset option2 = 3.141592\n"), vec![Set("option1".to_string(), Int(42)), Set("option2".to_string(), Float(3.141592))]);
     assert_eq!(parse_string("set option1 = 42\n\nset option2 = 3.141592\n"), vec![Set("option1".to_string(), Int(42)), Set("option2".to_string(), Float(3.141592))]);
+}
+
+#[test]
+fn unmap_command() {
+    assert_eq!(parse_string_with_config("nunmap o"), vec![Unmap { keys: vec![Char('o')], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nunmap <F1>"), vec![Unmap { keys: vec![F1], mode: "n".to_string() }]);
 }
 
 fn parse_error(input: &str) -> String {

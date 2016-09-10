@@ -26,7 +26,6 @@
 //! Call the `parse` function on the input.
 
 /*
- * TODO: Add unmap command.
  * TODO: Add array type.
  */
 
@@ -38,6 +37,7 @@ pub mod key;
 mod macros;
 #[doc(hidden)]
 pub mod position;
+mod string;
 
 use std::collections::HashMap;
 use std::io::BufRead;
@@ -45,6 +45,7 @@ use std::io::BufRead;
 use error::{Error, Result};
 use key::{Key, parse_keys};
 use position::Pos;
+use string::StrExt;
 
 use Command::*;
 use Value::*;
@@ -65,6 +66,13 @@ pub enum Command {
     },
     /// A set command sets a value to an option.
     Set(String, Value),
+    /// An unmap command removes a key mapping.
+    Unmap {
+        /// The key shortcut to remove.
+        keys: Vec<Key>,
+        /// The mode in which this mapping is available.
+        mode: String,
+    },
 }
 
 /// The parsing configuration.
@@ -103,6 +111,22 @@ pub fn parse_with_config<R: BufRead>(input: R, config: Config) -> Result<Vec<Com
     Ok(commands)
 }
 
+/// Check that we reached the end of the line.
+fn check_eol(line_num: usize, column_num: usize, line: &str, index: usize) -> Result<()> {
+    if line.len() > index {
+        let rest = &line[index..];
+        if let Some(word) = maybe_word(rest) {
+            let index = rest.find(word).unwrap(); // NOTE: the line contains the word, hence unwrap.
+            return Err(Box::new(Error::new(
+                rest.to_string(),
+                "<end of line>".to_string(),
+                Pos::new(line_num, column_num + index),
+            )));
+        }
+    }
+    Ok(())
+}
+
 /// Check if a string is an identifier.
 fn check_ident(string: String, pos: &Pos) -> Result<String> {
     if string.chars().all(|character| character.is_alphanumeric() || character == '-' || character == '_') {
@@ -114,8 +138,13 @@ fn check_ident(string: String, pos: &Pos) -> Result<String> {
 }
 
 /// Parse an include command.
-fn include_command(line: &str, _line_num: usize, _column_num: usize) -> Result<Command> {
-    Ok(Include(word(line).to_string()))
+fn include_command(line: &str, line_num: usize, column_num: usize) -> Result<Command> {
+    let word = word(line);
+    // NOTE: the line contains the word, hence unwrap.
+    let index = line.find(word).unwrap();
+    let after_index = index + word.len() + 1;
+    try!(check_eol(line_num, column_num + after_index, line, after_index));
+    Ok(Include(word.to_string()))
 }
 
 /// Parse a line.
@@ -145,21 +174,19 @@ fn line(line: &str, line_num: usize, config: &Config) -> Result<Option<Command>>
             }
         };
 
-        let (start, end) =
-            if word.len() > 3 {
-                word.split_at(word.len() - 3)
-            }
-            else {
-                ("", "")
-            };
+        let (start3, end3) = word.rsplit_at(3);
+        let (start5, end5) = word.rsplit_at(5);
         if word.starts_with('#') {
             Ok(None)
         }
         else if let Some(command) = commands.get(word) {
             command_with_args(command)
         }
-        else if end == "map" && config.mapping_modes.contains(&start.to_string()) {
-            command_with_args(&|line, line_num, column_num| map_command(line, line_num, column_num, start))
+        else if end3 == "map" && config.mapping_modes.contains(&start3.to_string()) {
+            command_with_args(&|line, line_num, column_num| map_command(line, line_num, column_num, start3))
+        }
+        else if end5 == "unmap" && config.mapping_modes.contains(&start5.to_string()) {
+            command_with_args(&|line, line_num, column_num| unmap_command(line, line_num, column_num, start5))
         }
         else {
             // NOTE: the word is in the line, hence unwrap.
@@ -232,9 +259,24 @@ fn set_command(line: &str, line_num: usize, column_num: usize) -> Result<Command
         Err(Box::new(Error::new(
             "<end of line>".to_string(),
             "=".to_string(),
-            Pos::new(line_num, column_num + line.len())
+            Pos::new(line_num, column_num + line.len()),
         )))
     }
+}
+
+/// Parse an unmap command.
+fn unmap_command(line: &str, line_num: usize, column_num: usize, mode: &str) -> Result<Command> {
+    let word = word(line);
+
+    // NOTE: the line contains the word, hence unwrap.
+    let index = line.find(word).unwrap();
+
+    let after_index = index + word.len() + 1;
+    try!(check_eol(line_num, column_num + after_index, line, after_index));
+    Ok(Unmap {
+        keys: try!(parse_keys(word, line_num, column_num + index)),
+        mode: mode.to_string(),
+    })
 }
 
 /// Parse a value.
