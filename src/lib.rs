@@ -158,7 +158,9 @@ fn line(line: &str, line_num: usize, config: &Config) -> Result<Option<Command>>
         };
 
     if let Some(word) = maybe_word(line) {
-        let start_index = word.len() + 1;
+        // NOTE: the word is in the line, hence unwrap.
+        let index = line.find(word).unwrap();
+        let start_index = index + word.len() + 1;
         let column = start_index + 1;
 
         let command_with_args = |command: &Fn(&str, usize, usize) -> Result<Command>| {
@@ -189,12 +191,10 @@ fn line(line: &str, line_num: usize, config: &Config) -> Result<Option<Command>>
             command_with_args(&|line, line_num, column_num| unmap_command(line, line_num, column_num, start5))
         }
         else {
-            // NOTE: the word is in the line, hence unwrap.
-            let index = line.find(word).unwrap() + 1;
             Err(Box::new(Error::new(
                 word.to_string(),
                 "command or comment".to_string(),
-                Pos::new(line_num, index)
+                Pos::new(line_num, index + 1)
             )))
         }
     }

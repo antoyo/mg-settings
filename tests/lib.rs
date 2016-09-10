@@ -117,6 +117,7 @@ fn set_command() {
     assert_eq!(parse_string("set option1 = 42\nset option2 = 3.141592"), vec![Set("option1".to_string(), Int(42)), Set("option2".to_string(), Float(3.141592))]);
     assert_eq!(parse_string("set option1 = 42\nset option2 = 3.141592\n"), vec![Set("option1".to_string(), Int(42)), Set("option2".to_string(), Float(3.141592))]);
     assert_eq!(parse_string("set option1 = 42\n\nset option2 = 3.141592\n"), vec![Set("option1".to_string(), Int(42)), Set("option2".to_string(), Float(3.141592))]);
+    assert_eq!(parse_string("  set    option1    =    42    "), vec![Set("option1".to_string(), Int(42))]);
 }
 
 #[test]
