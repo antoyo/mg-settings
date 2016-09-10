@@ -26,15 +26,14 @@
 //! Call the `parse` function on the input.
 
 /*
- * TODO: Add map command. A map command is a command that ends with map and the prefix is the mode.
  * TODO: Add unmap command.
- * TODO: Add include command.
  * TODO: Add array type.
  */
 
 #![warn(missing_docs)]
 
 pub mod error;
+pub mod key;
 #[macro_use]
 mod macros;
 #[doc(hidden)]
@@ -43,7 +42,8 @@ pub mod position;
 use std::collections::HashMap;
 use std::io::BufRead;
 
-use error::Error;
+use error::{Error, Result};
+use key::{Key, parse_keys};
 use position::Pos;
 
 use Command::*;
@@ -54,13 +54,25 @@ use Value::*;
 pub enum Command {
     /// An include command includes another configuration file.
     Include(String),
+    /// A map command creates a new key mapping.
+    Map {
+        /// The action that will be executed when the `keys` are pressed.
+        action: String,
+        /// The key shortcut to trigger the action.
+        keys: Vec<Key>,
+        /// The mode in which this mapping is available.
+        mode: String,
+    },
     /// A set command sets a value to an option.
     Set(String, Value),
 }
 
-/// A type alias over the specific `Result` type used by the parser to indicate whether it is
-/// successful or not.
-pub type Result<T> = std::result::Result<T, Box<std::error::Error>>;
+/// The parsing configuration.
+#[derive(Default)]
+pub struct Config {
+    /// The available mapping modes for the map command.
+    pub mapping_modes: Vec<String>,
+}
 
 /// The `Value` enum represents a value along with its type.
 #[derive(Debug, PartialEq)]
@@ -77,9 +89,14 @@ pub enum Value {
 
 /// Parse settings.
 pub fn parse<R: BufRead>(input: R) -> Result<Vec<Command>> {
+    parse_with_config(input, Config::default())
+}
+
+/// Parse settings.
+pub fn parse_with_config<R: BufRead>(input: R, config: Config) -> Result<Vec<Command>> {
     let mut commands = vec![];
     for (line_num, input_line) in input.lines().enumerate() {
-        if let Some(command) = try!(line(&try!(input_line), line_num + 1)) {
+        if let Some(command) = try!(line(&try!(input_line), line_num + 1, &config)) {
             commands.push(command);
         }
     }
@@ -97,21 +114,12 @@ fn check_ident(string: String, pos: &Pos) -> Result<String> {
 }
 
 /// Parse an include command.
-fn include_command(line: &str, line_num: usize, column_num: usize) -> Result<Command> {
-    if let Some(word) = word(line) {
-        Ok(Include(word.to_string()))
-    }
-    else {
-        Err(Box::new(Error::new(
-            "<eof>".to_string(),
-            "filename".to_string(),
-            Pos::new(line_num, column_num)
-        )))
-    }
+fn include_command(line: &str, _line_num: usize, _column_num: usize) -> Result<Command> {
+    Ok(Include(word(line).to_string()))
 }
 
 /// Parse a line.
-fn line(line: &str, line_num: usize) -> Result<Option<Command>> {
+fn line(line: &str, line_num: usize, config: &Config) -> Result<Option<Command>> {
     let include_func = &include_command;
     let set_func = &set_command;
     let commands =
@@ -120,23 +128,38 @@ fn line(line: &str, line_num: usize) -> Result<Option<Command>> {
             "set" => set_func,
         };
 
-    if let Some(word) = word(line) {
-        if word.starts_with('#') {
-            Ok(None)
-        }
-        else if let Some(command) = commands.get(word) {
-            let start_index = word.len() + 1;
-            let column = start_index + 1;
+    if let Some(word) = maybe_word(line) {
+        let start_index = word.len() + 1;
+        let column = start_index + 1;
+
+        let command_with_args = |command: &Fn(&str, usize, usize) -> Result<Command>| {
             if line.len() > start_index {
                 command(&line[start_index..], line_num, column).map(Some)
             }
             else {
-                Err(Box::new(Error::new(
-                    "<eof>".to_string(),
+                Err(From::from(Box::new(Error::new(
+                    "<end of line>".to_string(),
                     "command arguments".to_string(),
                     Pos::new(line_num, start_index)
-                )))
+                ))))
             }
+        };
+
+        let (start, end) =
+            if word.len() > 3 {
+                word.split_at(word.len() - 3)
+            }
+            else {
+                ("", "")
+            };
+        if word.starts_with('#') {
+            Ok(None)
+        }
+        else if let Some(command) = commands.get(word) {
+            command_with_args(command)
+        }
+        else if end == "map" && config.mapping_modes.contains(&start.to_string()) {
+            command_with_args(&|line, line_num, column_num| map_command(line, line_num, column_num, start))
         }
         else {
             // NOTE: the word is in the line, hence unwrap.
@@ -151,6 +174,36 @@ fn line(line: &str, line_num: usize) -> Result<Option<Command>> {
     else {
         Ok(None)
     }
+}
+
+/// Parse a map command.
+fn map_command(line: &str, line_num: usize, column_num: usize, mode: &str) -> Result<Command> {
+    let word = word(line);
+
+    // NOTE: the line contains the word, hence unwrap.
+    let index = line.find(word).unwrap();
+
+    let rest = &line[index + word.len() ..].trim();
+    if !rest.is_empty() {
+        Ok(Map {
+            action: rest.to_string(),
+            keys: try!(parse_keys(word, line_num, column_num + index)),
+            mode: mode.to_string(),
+        })
+    }
+    else {
+        Err(Box::new(Error::new(
+            "<end of line>".to_string(),
+            "mapping action".to_string(),
+            Pos::new(line_num, column_num + line.len())
+        )))
+    }
+}
+
+/// Parse a single word.
+fn maybe_word(input: &str) -> Option<&str> {
+    input.split_whitespace()
+        .next()
 }
 
 /// Parse a set command.
@@ -177,7 +230,7 @@ fn set_command(line: &str, line_num: usize, column_num: usize) -> Result<Command
     }
     else {
         Err(Box::new(Error::new(
-            "<eof>".to_string(),
+            "<end of line>".to_string(),
             "=".to_string(),
             Pos::new(line_num, column_num + line.len())
         )))
@@ -190,7 +243,7 @@ fn value(input: &str, line_num: usize, column_num: usize) -> Result<Value> {
     let string = string.trim();
     match string {
         "" => Err(Box::new(Error::new(
-                  "<eof>".to_string(),
+                  "<end of line>".to_string(),
                   "value".to_string(),
                   Pos::new(line_num, column_num + string.len())
               ))),
@@ -213,8 +266,11 @@ fn value(input: &str, line_num: usize, column_num: usize) -> Result<Value> {
 }
 
 /// Parse a single word.
-fn word(input: &str) -> Option<&str> {
-    input.split_whitespace().next()
+/// This function assumes there is always at least a word in `input`.
+fn word(input: &str) -> &str {
+    input.split_whitespace()
+        .next()
+        .unwrap()
 }
 
 /// Parse a `count` words.

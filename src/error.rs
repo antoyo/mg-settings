@@ -46,7 +46,7 @@ impl Error {
 }
 
 impl Display for Error {
-    fn fmt(&self, formatter: &mut Formatter) -> Result<(), fmt::Error> {
+    fn fmt(&self, formatter: &mut Formatter) -> ::std::result::Result<(), fmt::Error> {
         write!(formatter, "unexpected {}, expecting {} on {}", self.unexpected, self.expected, self.pos)
     }
 }
@@ -56,3 +56,7 @@ impl error::Error for Error {
         "parse error"
     }
 }
+
+/// A type alias over the specific `Result` type used by the parser to indicate whether it is
+/// successful or not.
+pub type Result<T> = ::std::result::Result<T, Box<::std::error::Error>>;
