@@ -19,17 +19,43 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#[macro_use]
 extern crate mg_settings;
 
-use mg_settings::{Config, parse, parse_with_config};
-use mg_settings::Command::{self, Include, Map, Set, Unmap};
+use mg_settings::{Config, EnumFromStr, Parser};
+use mg_settings::Command::{self, Custom, Include, Map, Set, Unmap};
 use mg_settings::key::Key::{Char, Control, Down, Enter, Escape, F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, Left, Right, Space, Tab, Up};
 use mg_settings::Value::{Bool, Float, Int, Str};
+
+use CustomCommand::*;
+
+commands!(CustomCommand {
+    Open(String),
+    Quit,
+});
+
+type CommandParser = Parser<CustomCommand>;
+
+#[test]
+fn commands_macro() {
+    assert_eq!(Ok(Quit), CustomCommand::create("Quit", ""));
+    assert_eq!(Ok(Open("crates.io".to_string())), CustomCommand::create("Open", "crates.io"));
+    assert_eq!(Ok(Quit), CustomCommand::create("Quit", "crates.io"));
+    assert_eq!(Err("unknown command ope".to_string()), CustomCommand::create("Ope", ""));
+}
 
 #[test]
 fn comments() {
     assert_eq!(parse_string("# Comment."), vec![]);
     assert_eq!(parse_string("set option1 = 5 # Comment."), vec![Set("option1".to_string(), Int(5))]);
+}
+
+#[test]
+fn custom_commands() {
+    assert_eq!(parse_string("quit"), vec![Custom(Quit)]);
+    assert_eq!(parse_string("open crates.io"), vec![Custom(Open("crates.io".to_string()))]);
+    assert_eq!(parse_string("open   crates.io  "), vec![Custom(Open("crates.io".to_string()))]);
+    assert_eq!(parse_string("  open   crates.io  "), vec![Custom(Open("crates.io".to_string()))]);
 }
 
 #[test]
@@ -68,6 +94,7 @@ fn parser_errors() {
     assert_eq!(parse_error_with_config("mmap o :open"), "unexpected mmap, expecting command or comment on line 1, column 1".to_string());
     assert_eq!(parse_error_with_config("nunmap <F1> :help"), "unexpected :help, expecting <end of line> on line 1, column 13".to_string());
     assert_eq!(parse_error_with_config("include config my-other-config"), "unexpected my-other-config, expecting <end of line> on line 1, column 16".to_string());
+    assert_eq!(parse_error("open"), "unexpected <end of line>, expecting command arguments on line 1, column 5".to_string());
 }
 
 #[test]
@@ -127,21 +154,26 @@ fn unmap_command() {
 }
 
 fn parse_error(input: &str) -> String {
-    parse(input.as_bytes()).unwrap_err().to_string()
+    let mut parser = CommandParser::new();
+    parser.parse(input.as_bytes()).unwrap_err().to_string()
 }
 
 fn parse_error_with_config(input: &str) -> String {
-    parse_with_config(input.as_bytes(), Config {
+    let mut parser = CommandParser::new_with_config(Config {
         mapping_modes: vec!["n".to_string(), "i".to_string(), "c".to_string()],
-    }).unwrap_err().to_string()
+    });
+    parser.parse(input.as_bytes(), ).unwrap_err().to_string()
 }
 
-fn parse_string(input: &str) -> Vec<Command> {
-    parse(input.as_bytes()).unwrap()
+fn parse_string(input: &str) -> Vec<Command<CustomCommand>> {
+    let mut parser = CommandParser::new();
+    parser.parse(input.as_bytes()).unwrap()
 }
 
-fn parse_string_with_config(input: &str) -> Vec<Command> {
-    parse_with_config(input.as_bytes(), Config {
+fn parse_string_with_config(input: &str) -> Vec<Command<CustomCommand>> {
+    let mut parser = CommandParser::new_with_config(Config {
         mapping_modes: vec!["n".to_string(), "i".to_string(), "c".to_string()],
-    }).unwrap()
+    });
+    println!("{:?}", parser.parse(input.as_bytes()));
+    parser.parse(input.as_bytes()).unwrap()
 }

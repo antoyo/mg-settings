@@ -20,10 +20,19 @@
  */
 
 pub trait StrExt<'a> {
+    fn capitalize(&self) -> String;
     fn rsplit_at(&'a self, index: usize) -> (&'a str, &'a str);
 }
 
 impl<'a> StrExt<'a> for &'a str {
+    fn capitalize(&self) -> String {
+        let mut chars = self.chars();
+        match chars.next() {
+            None => String::new(),
+            Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+        }
+    }
+
     fn rsplit_at(&'a self, index: usize) -> (&'a str, &'a str) {
         if self.len() > index {
             self.split_at(self.len() - index)
