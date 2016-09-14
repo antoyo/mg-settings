@@ -304,6 +304,19 @@ impl<T: EnumFromStr> Parser<T> {
         Ok(commands)
     }
 
+    /// Parse a single line of settings.
+    pub fn parse_line(&mut self, line: &str) -> Result<Command<T>> {
+        let mut commands = try!(self.parse(line.as_bytes()));
+        match commands.pop() {
+            Some(command) => Ok(command),
+            None => Err(Box::new(Error::new(
+                        "comment or <end of line>".to_string(),
+                        "command".to_string(),
+                        Pos::new(self.line, self.column + line.len())
+                    )))
+        }
+    }
+
     /// Parse a set command.
     fn set_command(&mut self, line: &str) -> Result<Command<T>> {
         if let Some(words) = words(line, 2) {

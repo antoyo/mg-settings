@@ -64,6 +64,12 @@ fn lexer_errors() {
 }
 
 #[test]
+fn line() {
+    let mut parser = CommandParser::new();
+    assert_eq!(parser.parse_line("quit").unwrap(), Custom(Quit));
+}
+
+#[test]
 fn newlines() {
     assert_eq!(parse_error("\n$ Comment."), "unexpected $, expecting command or comment on line 2, column 1".to_string());
     assert_eq!(parse_error("\r\n$ Comment."), "unexpected $, expecting command or comment on line 2, column 1".to_string());
