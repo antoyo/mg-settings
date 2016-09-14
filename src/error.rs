@@ -29,17 +29,22 @@ use position::Pos;
 /// Struct which holds information about an error at a specific position.
 #[derive(Debug, PartialEq)]
 pub struct Error {
-    expected: String,
+    /// The expected token.
+    pub expected: String,
     pos: Pos,
-    unexpected: String,
+    /// The error type.
+    pub typ: ErrorType,
+    /// The unexpected token.
+    pub unexpected: String,
 }
 
 impl Error {
     /// Create a new error.
-    pub fn new(unexpected: String, expected: String, pos: Pos) -> Error {
+    pub fn new(typ: ErrorType, unexpected: String, expected: String, pos: Pos) -> Error {
         Error {
             expected: expected,
             pos: pos,
+            typ: typ,
             unexpected: unexpected,
         }
     }
@@ -55,6 +60,19 @@ impl error::Error for Error {
     fn description(&self) -> &str {
         "parse error"
     }
+}
+
+/// A set of error types that can occur parsing the settings file.
+#[derive(Debug, PartialEq)]
+pub enum ErrorType {
+    /// A missing argument.
+    MissingArgument,
+    /// No command (or a comment) was entered.
+    NoCommand,
+    /// Parse error.
+    Parse,
+    /// Unknown command.
+    UnknownCommand,
 }
 
 /// A type alias over the specific `Result` type used by the parser to indicate whether it is

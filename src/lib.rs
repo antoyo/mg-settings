@@ -44,6 +44,7 @@ use std::io::BufRead;
 use std::marker::PhantomData;
 
 use error::{Error, Result};
+use error::ErrorType::{MissingArgument, NoCommand, Parse, UnknownCommand};
 use key::{Key, parse_keys};
 use position::Pos;
 use string::StrExt;
@@ -162,6 +163,7 @@ impl<T: EnumFromStr> Parser<T> {
             if let Some(word) = maybe_word(rest) {
                 let index = rest.find(word).unwrap(); // NOTE: the line contains the word, hence unwrap.
                 return Err(Box::new(Error::new(
+                    Parse,
                     rest.to_string(),
                     "<end of line>".to_string(),
                     Pos::new(self.line, self.column + index),
@@ -179,7 +181,7 @@ impl<T: EnumFromStr> Parser<T> {
                 line[start_index..].trim()
             }
             else if let Ok(true) = T::has_argument(variant) {
-                return Err(From::from(self.missing_args(start_index)));
+                return Err(Box::new(self.missing_args(start_index)));
             }
             else {
                 ""
@@ -189,6 +191,7 @@ impl<T: EnumFromStr> Parser<T> {
         }
         else {
             Err(Box::new(Error::new(
+                UnknownCommand,
                 word.to_string(),
                 "command or comment".to_string(),
                 Pos::new(self.line, index + 1)
@@ -203,7 +206,7 @@ impl<T: EnumFromStr> Parser<T> {
             Ok(&line[column..])
         }
         else {
-            Err(From::from(self.missing_args(column)))
+            Err(Box::new(self.missing_args(column)))
         }
     }
 
@@ -276,6 +279,7 @@ impl<T: EnumFromStr> Parser<T> {
         }
         else {
             Err(Box::new(Error::new(
+                Parse,
                 "<end of line>".to_string(),
                 "mapping action".to_string(),
                 Pos::new(self.line, self.column + line.len())
@@ -284,12 +288,13 @@ impl<T: EnumFromStr> Parser<T> {
     }
 
     /// Get an missing arguments error.
-    fn missing_args(&self, column: usize) -> Box<Error> {
-        Box::new(Error::new(
+    fn missing_args(&self, column: usize) -> Error {
+        Error::new(
+            MissingArgument,
             "<end of line>".to_string(),
             "command arguments".to_string(),
             Pos::new(self.line, column)
-        ))
+        )
     }
 
     /// Parse settings.
@@ -310,6 +315,7 @@ impl<T: EnumFromStr> Parser<T> {
         match commands.pop() {
             Some(command) => Ok(command),
             None => Err(Box::new(Error::new(
+                        NoCommand,
                         "comment or <end of line>".to_string(),
                         "command".to_string(),
                         Pos::new(self.line, self.column + line.len())
@@ -334,6 +340,7 @@ impl<T: EnumFromStr> Parser<T> {
             }
             else {
                 Err(Box::new(Error::new(
+                    Parse,
                     operator.to_string(),
                     "=".to_string(),
                     Pos::new(self.line, self.column + operator_index)
@@ -342,6 +349,7 @@ impl<T: EnumFromStr> Parser<T> {
         }
         else {
             Err(Box::new(Error::new(
+                Parse,
                 "<end of line>".to_string(),
                 "=".to_string(),
                 Pos::new(self.line, self.column + line.len()),
@@ -371,6 +379,7 @@ impl<T: EnumFromStr> Parser<T> {
         let string = string.trim();
         match string {
             "" => Err(Box::new(Error::new(
+                      Parse,
                       "<end of line>".to_string(),
                       "value".to_string(),
                       Pos::new(self.line, self.column + string.len())
@@ -414,7 +423,7 @@ fn check_ident(string: String, pos: &Pos) -> Result<String> {
             return Ok(string)
         }
     }
-    Err(Box::new(Error::new(string, "identifier".to_string(), pos.clone())))
+    Err(Box::new(Error::new(Parse, string, "identifier".to_string(), pos.clone())))
 }
 
 /// Parse a single word.

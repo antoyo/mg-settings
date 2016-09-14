@@ -22,6 +22,7 @@
 //! Type for representing keys and functions for parsing strings into `Key`s.
 
 use error::{Error, Result};
+use error::ErrorType::Parse;
 use position::Pos;
 
 use self::Key::*;
@@ -87,6 +88,7 @@ fn parse_key(input: &str, line_num: usize, column_num: usize) -> Result<(Key, us
                     match character {
                         'A' ... 'Z' | 'a' ... 'z' => (Control(Box::new(Char(character))), 5),
                         _ => return Err(Box::new(Error::new(
+                                 Parse,
                                  character.to_string(),
                                  "A-Z".to_string(),
                                  Pos::new(line_num, column_num + 3)
@@ -116,6 +118,7 @@ fn parse_key(input: &str, line_num: usize, column_num: usize) -> Result<(Key, us
                         "Tab" => (Tab, 5),
                         "Up" => (Up, 4),
                         _ => return Err(Box::new(Error::new(
+                                 Parse,
                                  key.clone(),
                                  "special key".to_string(),
                                  Pos::new(line_num, column_num + 1)
@@ -125,6 +128,7 @@ fn parse_key(input: &str, line_num: usize, column_num: usize) -> Result<(Key, us
             },
             Some(character @ 'A' ... 'Z') | Some(character @ 'a' ... 'z') => (Char(character), 1),
             Some(character) => return Err(Box::new(Error::new(
+                Parse,
                 character.to_string(),
                 "key".to_string(),
                 Pos::new(line_num, column_num)
