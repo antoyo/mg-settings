@@ -26,6 +26,8 @@
 //! Call the `parse` function on the input.
 
 /*
+ * TODO: support attributes like #[special_command] and #[help(Quit the application)] in the
+ * commands! macro.
  * TODO: create a new method instead of using words and find/unwrap.
  * TODO: Add array type.
  */

@@ -28,7 +28,7 @@ use position::Pos;
 use self::Key::*;
 
 /// Enum representing the keys that can be used in a mapping.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, Hash, PartialEq)]
 pub enum Key {
     /// A single-character key.
     Char(char),
