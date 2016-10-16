@@ -200,6 +200,10 @@
 <span id="156">156</span>
 <span id="157">157</span>
 <span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
 </pre><pre class='rust '>
 <span class='comment'>/*
  * Copyright (c) 2016 Boucher, Antoni &lt;bouanto@zoho.com&gt;
@@ -233,6 +237,8 @@
 <span class='doccomment'>/// Enum representing the keys that can be used in a mapping.</span>
 <span class='attribute'>#[<span class='ident'>derive</span>(<span class='ident'>Debug</span>, <span class='ident'>Eq</span>, <span class='ident'>Hash</span>, <span class='ident'>PartialEq</span>)]</span>
 <span class='kw'>pub</span> <span class='kw'>enum</span> <span class='ident'>Key</span> {
+    <span class='doccomment'>/// Backspace key.</span>
+    <span class='ident'>Backspace</span>,
     <span class='doccomment'>/// A single-character key.</span>
     <span class='ident'>Char</span>(<span class='ident'>char</span>),
     <span class='doccomment'>/// Control + another key.</span>
@@ -269,10 +275,6 @@
     <span class='ident'>F12</span>,
     <span class='doccomment'>/// Left arrow.</span>
     <span class='ident'>Left</span>,
-    <span class='doccomment'>/// Minus.</span>
-    <span class='ident'>Minus</span>,
-    <span class='doccomment'>/// Plus.</span>
-    <span class='ident'>Plus</span>,
     <span class='doccomment'>/// Right arrow.</span>
     <span class='ident'>Right</span>,
     <span class='doccomment'>/// Space key.</span>
@@ -304,6 +306,7 @@
                 }
                 <span class='kw'>else</span> {
                     <span class='kw'>match</span> <span class='ident'>key</span>.<span class='ident'>as_str</span>() {
+                        <span class='string'>&quot;Backspace&quot;</span> <span class='op'>=&gt;</span> (<span class='ident'>Backspace</span>, <span class='number'>11</span>),
                         <span class='string'>&quot;Down&quot;</span> <span class='op'>=&gt;</span> (<span class='ident'>Down</span>, <span class='number'>6</span>),
                         <span class='string'>&quot;Enter&quot;</span> <span class='op'>=&gt;</span> (<span class='ident'>Enter</span>, <span class='number'>7</span>),
                         <span class='string'>&quot;Esc&quot;</span> <span class='op'>=&gt;</span> (<span class='ident'>Escape</span>, <span class='number'>5</span>),
@@ -320,8 +323,6 @@
                         <span class='string'>&quot;F11&quot;</span> <span class='op'>=&gt;</span> (<span class='ident'>F11</span>, <span class='number'>5</span>),
                         <span class='string'>&quot;F12&quot;</span> <span class='op'>=&gt;</span> (<span class='ident'>F12</span>, <span class='number'>5</span>),
                         <span class='string'>&quot;Left&quot;</span> <span class='op'>=&gt;</span> (<span class='ident'>Left</span>, <span class='number'>6</span>),
-                        <span class='string'>&quot;Minus&quot;</span> <span class='op'>=&gt;</span> (<span class='ident'>Minus</span>, <span class='number'>7</span>),
-                        <span class='string'>&quot;Plus&quot;</span> <span class='op'>=&gt;</span> (<span class='ident'>Plus</span>, <span class='number'>6</span>),
                         <span class='string'>&quot;Right&quot;</span> <span class='op'>=&gt;</span> (<span class='ident'>Right</span>, <span class='number'>7</span>),
                         <span class='string'>&quot;Space&quot;</span> <span class='op'>=&gt;</span> (<span class='ident'>Space</span>, <span class='number'>7</span>),
                         <span class='string'>&quot;Tab&quot;</span> <span class='op'>=&gt;</span> (<span class='ident'>Tab</span>, <span class='number'>5</span>),
@@ -335,13 +336,20 @@
                     }
                 }
             },
-            <span class='prelude-val'>Some</span>(<span class='ident'>character</span> @ <span class='string'>&#39;A&#39;</span> ... <span class='string'>&#39;Z&#39;</span>) <span class='op'>|</span> <span class='prelude-val'>Some</span>(<span class='ident'>character</span> @ <span class='string'>&#39;a&#39;</span> ... <span class='string'>&#39;z&#39;</span>) <span class='op'>=&gt;</span> (<span class='ident'>Char</span>(<span class='ident'>character</span>), <span class='number'>1</span>),
-            <span class='prelude-val'>Some</span>(<span class='ident'>character</span>) <span class='op'>=&gt;</span> <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>Box</span>::<span class='ident'>new</span>(<span class='ident'>Error</span>::<span class='ident'>new</span>(
-                <span class='ident'>Parse</span>,
-                <span class='ident'>character</span>.<span class='ident'>to_string</span>(),
-                <span class='string'>&quot;key&quot;</span>.<span class='ident'>to_string</span>(),
-                <span class='ident'>Pos</span>::<span class='ident'>new</span>(<span class='ident'>line_num</span>, <span class='ident'>column_num</span>)
-            ))),
+            <span class='prelude-val'>Some</span>(<span class='ident'>character</span>) <span class='op'>=&gt;</span> {
+                <span class='kw'>let</span> <span class='ident'>characters</span> <span class='op'>=</span> <span class='string'>&quot;=+-;!\&quot;#%&amp;()*,./&lt;&gt;?@[\\]^_{|}~çÇéÉàÀèÈ$&quot;</span>;
+                <span class='kw'>match</span> <span class='ident'>character</span> {
+                    <span class='string'>&#39;A&#39;</span> ... <span class='string'>&#39;Z&#39;</span> <span class='op'>|</span> <span class='string'>&#39;a&#39;</span> ... <span class='string'>&#39;z&#39;</span> <span class='op'>=&gt;</span> (<span class='ident'>Char</span>(<span class='ident'>character</span>), <span class='number'>1</span>),
+                    _ <span class='kw'>if</span> <span class='ident'>characters</span>.<span class='ident'>contains</span>(<span class='ident'>character</span>) <span class='op'>=&gt;</span> (<span class='ident'>Char</span>(<span class='ident'>character</span>), <span class='number'>1</span>),
+                    _ <span class='op'>=&gt;</span>
+                        <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>Box</span>::<span class='ident'>new</span>(<span class='ident'>Error</span>::<span class='ident'>new</span>(
+                            <span class='ident'>Parse</span>,
+                            <span class='ident'>character</span>.<span class='ident'>to_string</span>(),
+                            <span class='string'>&quot;key&quot;</span>.<span class='ident'>to_string</span>(),
+                            <span class='ident'>Pos</span>::<span class='ident'>new</span>(<span class='ident'>line_num</span>, <span class='ident'>column_num</span>)
+                        )))
+                }
+            },
             <span class='prelude-val'>None</span> <span class='op'>=&gt;</span> <span class='macro'>unreachable</span><span class='macro'>!</span>() ,
         };
     <span class='prelude-val'>Ok</span>(<span class='ident'>result</span>)
