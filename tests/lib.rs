@@ -24,7 +24,7 @@ extern crate mg_settings;
 
 use mg_settings::{Config, EnumFromStr, Parser};
 use mg_settings::Command::{self, Custom, Include, Map, Set, Unmap};
-use mg_settings::key::Key::{Char, Control, Down, Enter, Escape, F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, Left, Minus, Plus, Right, Space, Tab, Up};
+use mg_settings::key::Key::{Backspace, Char, Control, Down, Enter, Escape, F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, Left, Right, Space, Tab, Up};
 use mg_settings::Value::{Bool, Float, Int, Str};
 
 use CustomCommand::*;
@@ -89,8 +89,6 @@ fn parser_errors() {
     assert_eq!(parse_error("set"), "unexpected <end of line>, expecting command arguments on line 1, column 4".to_string());
     assert_eq!(parse_error("set option1"), "unexpected <end of line>, expecting = on line 1, column 12".to_string());
     assert_eq!(parse_error("include"), "unexpected <end of line>, expecting command arguments on line 1, column 8".to_string());
-    assert_eq!(parse_error_with_config("nmap @ :open"), "unexpected @, expecting key on line 1, column 6".to_string());
-    assert_eq!(parse_error_with_config("nmap o@ :open"), "unexpected @, expecting key on line 1, column 7".to_string());
     assert_eq!(parse_error_with_config("nmap a"), "unexpected <end of line>, expecting mapping action on line 1, column 7".to_string());
     assert_eq!(parse_error_with_config("nmap"), "unexpected <end of line>, expecting command arguments on line 1, column 5".to_string());
     assert_eq!(parse_error_with_config("nmap <C-@> :open"), "unexpected @, expecting A-Z on line 1, column 9".to_string());
@@ -112,6 +110,7 @@ fn include_command() {
 #[test]
 fn map_command() {
     assert_eq!(parse_string_with_config("nmap o :open"), vec![Map { action: ":open".to_string(), keys: vec![Char('o')], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <Backspace> :help"), vec![Map { action: ":help".to_string(), keys: vec![Backspace], mode: "n".to_string() }]);
     assert_eq!(parse_string_with_config("nmap <F1> :help"), vec![Map { action: ":help".to_string(), keys: vec![F1], mode: "n".to_string() }]);
     assert_eq!(parse_string_with_config("nmap <F2> :help"), vec![Map { action: ":help".to_string(), keys: vec![F2], mode: "n".to_string() }]);
     assert_eq!(parse_string_with_config("nmap <F3> :help"), vec![Map { action: ":help".to_string(), keys: vec![F3], mode: "n".to_string() }]);
@@ -128,8 +127,8 @@ fn map_command() {
     assert_eq!(parse_string_with_config("nmap <Enter> :help"), vec![Map { action: ":help".to_string(), keys: vec![Enter], mode: "n".to_string() }]);
     assert_eq!(parse_string_with_config("nmap <Esc> :help"), vec![Map { action: ":help".to_string(), keys: vec![Escape], mode: "n".to_string() }]);
     assert_eq!(parse_string_with_config("nmap <Left> :help"), vec![Map { action: ":help".to_string(), keys: vec![Left], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <Minus> :help"), vec![Map { action: ":help".to_string(), keys: vec![Minus], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <Plus> :help"), vec![Map { action: ":help".to_string(), keys: vec![Plus], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap - :help"), vec![Map { action: ":help".to_string(), keys: vec![Char('-')], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap + :help"), vec![Map { action: ":help".to_string(), keys: vec![Char('+')], mode: "n".to_string() }]);
     assert_eq!(parse_string_with_config("nmap <Right> :help"), vec![Map { action: ":help".to_string(), keys: vec![Right], mode: "n".to_string() }]);
     assert_eq!(parse_string_with_config("nmap <Space> :help"), vec![Map { action: ":help".to_string(), keys: vec![Space], mode: "n".to_string() }]);
     assert_eq!(parse_string_with_config("nmap <Tab> :help"), vec![Map { action: ":help".to_string(), keys: vec![Tab], mode: "n".to_string() }]);

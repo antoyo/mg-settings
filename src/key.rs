@@ -30,6 +30,8 @@ use self::Key::*;
 /// Enum representing the keys that can be used in a mapping.
 #[derive(Debug, Eq, Hash, PartialEq)]
 pub enum Key {
+    /// Backspace key.
+    Backspace,
     /// A single-character key.
     Char(char),
     /// Control + another key.
@@ -66,10 +68,6 @@ pub enum Key {
     F12,
     /// Left arrow.
     Left,
-    /// Minus.
-    Minus,
-    /// Plus.
-    Plus,
     /// Right arrow.
     Right,
     /// Space key.
@@ -101,6 +99,7 @@ fn parse_key(input: &str, line_num: usize, column_num: usize) -> Result<(Key, us
                 }
                 else {
                     match key.as_str() {
+                        "Backspace" => (Backspace, 11),
                         "Down" => (Down, 6),
                         "Enter" => (Enter, 7),
                         "Esc" => (Escape, 5),
@@ -117,8 +116,6 @@ fn parse_key(input: &str, line_num: usize, column_num: usize) -> Result<(Key, us
                         "F11" => (F11, 5),
                         "F12" => (F12, 5),
                         "Left" => (Left, 6),
-                        "Minus" => (Minus, 7),
-                        "Plus" => (Plus, 6),
                         "Right" => (Right, 7),
                         "Space" => (Space, 7),
                         "Tab" => (Tab, 5),
@@ -132,13 +129,20 @@ fn parse_key(input: &str, line_num: usize, column_num: usize) -> Result<(Key, us
                     }
                 }
             },
-            Some(character @ 'A' ... 'Z') | Some(character @ 'a' ... 'z') => (Char(character), 1),
-            Some(character) => return Err(Box::new(Error::new(
-                Parse,
-                character.to_string(),
-                "key".to_string(),
-                Pos::new(line_num, column_num)
-            ))),
+            Some(character) => {
+                let characters = "=+-;!\"#%&()*,./<>?@[\\]^_{|}~çÇéÉàÀèÈ$";
+                match character {
+                    'A' ... 'Z' | 'a' ... 'z' => (Char(character), 1),
+                    _ if characters.contains(character) => (Char(character), 1),
+                    _ =>
+                        return Err(Box::new(Error::new(
+                            Parse,
+                            character.to_string(),
+                            "key".to_string(),
+                            Pos::new(line_num, column_num)
+                        )))
+                }
+            },
             None => unreachable!() ,
         };
     Ok(result)
