@@ -66,6 +66,10 @@ pub enum Key {
     F12,
     /// Left arrow.
     Left,
+    /// Minus.
+    Minus,
+    /// Plus.
+    Plus,
     /// Right arrow.
     Right,
     /// Space key.
@@ -113,6 +117,8 @@ fn parse_key(input: &str, line_num: usize, column_num: usize) -> Result<(Key, us
                         "F11" => (F11, 5),
                         "F12" => (F12, 5),
                         "Left" => (Left, 6),
+                        "Minus" => (Minus, 7),
+                        "Plus" => (Plus, 6),
                         "Right" => (Right, 7),
                         "Space" => (Space, 7),
                         "Tab" => (Tab, 5),

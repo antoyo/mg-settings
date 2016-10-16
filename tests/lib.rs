@@ -24,7 +24,7 @@ extern crate mg_settings;
 
 use mg_settings::{Config, EnumFromStr, Parser};
 use mg_settings::Command::{self, Custom, Include, Map, Set, Unmap};
-use mg_settings::key::Key::{Char, Control, Down, Enter, Escape, F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, Left, Right, Space, Tab, Up};
+use mg_settings::key::Key::{Char, Control, Down, Enter, Escape, F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, Left, Minus, Plus, Right, Space, Tab, Up};
 use mg_settings::Value::{Bool, Float, Int, Str};
 
 use CustomCommand::*;
@@ -128,6 +128,8 @@ fn map_command() {
     assert_eq!(parse_string_with_config("nmap <Enter> :help"), vec![Map { action: ":help".to_string(), keys: vec![Enter], mode: "n".to_string() }]);
     assert_eq!(parse_string_with_config("nmap <Esc> :help"), vec![Map { action: ":help".to_string(), keys: vec![Escape], mode: "n".to_string() }]);
     assert_eq!(parse_string_with_config("nmap <Left> :help"), vec![Map { action: ":help".to_string(), keys: vec![Left], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <Minus> :help"), vec![Map { action: ":help".to_string(), keys: vec![Minus], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <Plus> :help"), vec![Map { action: ":help".to_string(), keys: vec![Plus], mode: "n".to_string() }]);
     assert_eq!(parse_string_with_config("nmap <Right> :help"), vec![Map { action: ":help".to_string(), keys: vec![Right], mode: "n".to_string() }]);
     assert_eq!(parse_string_with_config("nmap <Space> :help"), vec![Map { action: ":help".to_string(), keys: vec![Space], mode: "n".to_string() }]);
     assert_eq!(parse_string_with_config("nmap <Tab> :help"), vec![Map { action: ":help".to_string(), keys: vec![Tab], mode: "n".to_string() }]);
