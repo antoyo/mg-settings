@@ -26,7 +26,7 @@ extern crate mg_settings;
 extern crate mg_settings_macros;
 
 use mg_settings::{Config, EnumFromStr, Parser};
-use mg_settings::Command::{self, Custom, Include, Map, Set, Unmap};
+use mg_settings::Command::{self, Custom, Map, Set, Unmap};
 use mg_settings::key::Key::{Backspace, Char, Control, Down, Enter, Escape, F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, Left, Right, Space, Tab, Up};
 use mg_settings::Value::{Bool, Float, Int, Str};
 
@@ -110,8 +110,9 @@ fn parser_errors() {
 
 #[test]
 fn include_command() {
-    assert_eq!(parse_string("include file.conf"), vec![Include("file.conf".to_string())]);
-    assert_eq!(parse_string("include  file.conf"), vec![Include("file.conf".to_string())]);
+    assert_eq!(parse_string("include file.conf"), vec![Set("option1".to_string(), Int(5))]);
+    assert_eq!(parse_string("include  file.conf"), vec![Set("option1".to_string(), Int(5))]);
+    assert_eq!(parse_string_no_include_path("include tests/file.conf"), vec![Set("option1".to_string(), Int(5))]);
 }
 
 #[test]
@@ -180,6 +181,12 @@ fn parse_error_with_config(input: &str) -> String {
 }
 
 fn parse_string(input: &str) -> Vec<Command<CustomCommand>> {
+    let mut parser = CommandParser::new();
+    parser.set_include_path("tests");
+    parser.parse(input.as_bytes()).unwrap()
+}
+
+fn parse_string_no_include_path(input: &str) -> Vec<Command<CustomCommand>> {
     let mut parser = CommandParser::new();
     parser.parse(input.as_bytes()).unwrap()
 }

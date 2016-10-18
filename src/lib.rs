@@ -42,8 +42,10 @@ pub mod position;
 mod string;
 
 use std::collections::HashMap;
-use std::io::BufRead;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 use std::marker::PhantomData;
+use std::path::Path;
 
 use error::{Error, Result};
 use error::ErrorType::{MissingArgument, NoCommand, Parse, UnknownCommand};
@@ -91,8 +93,6 @@ pub trait EnumMetaData {
 pub enum Command<T> {
     /// A custom command.
     Custom(T),
-    /// An include command includes another configuration file.
-    Include(String),
     /// A map command creates a new key mapping.
     Map {
         /// The action that will be executed when the `keys` are pressed.
@@ -124,6 +124,7 @@ pub struct Config {
 pub struct Parser<T> {
     column: usize,
     config: Config,
+    include_path: String,
     line: usize,
     _phantom: PhantomData<T>,
 }
@@ -134,6 +135,7 @@ impl<T: EnumFromStr> Parser<T> {
         Parser {
             column: 1,
             config: Config::default(),
+            include_path: "./".to_string(),
             line: 1,
             _phantom: PhantomData,
         }
@@ -144,6 +146,7 @@ impl<T: EnumFromStr> Parser<T> {
         Parser {
             column: 1,
             config: config,
+            include_path: "./".to_string(),
             line: 1,
             _phantom: PhantomData,
         }
@@ -203,7 +206,7 @@ impl<T: EnumFromStr> Parser<T> {
     }
 
     /// Parse a line.
-    fn line(&mut self, line: &str) -> Result<Option<Command<T>>> {
+    fn line(&mut self, line: &str) -> Result<Vec<Command<T>>> {
         if let Some(word) = maybe_word(line) {
             // NOTE: the word is in the line, hence unwrap.
             let index = line.find(word).unwrap();
@@ -213,45 +216,51 @@ impl<T: EnumFromStr> Parser<T> {
             let (start3, end3) = word.rsplit_at(3);
             let (start5, end5) = word.rsplit_at(5);
             if word.starts_with('#') {
-                return Ok(None);
+                return Ok(vec![]);
             }
 
-            let command =
-                if word == "include" {
-                    let rest = try!(self.get_rest(line, start_index));
-                    self.include_command(rest)
-                }
-                else if word == "set" {
-                    let rest = try!(self.get_rest(line, start_index));
-                    self.set_command(rest)
-                }
-                else if end3 == "map" && self.config.mapping_modes.contains(&start3.to_string()) {
-                    let rest = try!(self.get_rest(line, start_index));
-                    self.map_command(rest, start3)
-                }
-                else if end5 == "unmap" && self.config.mapping_modes.contains(&start5.to_string()) {
-                    let rest = try!(self.get_rest(line, start_index));
-                    self.unmap_command(rest, start5)
-                }
-                else {
-                    self.custom_command(line, word, start_index, index)
-                };
-            command.map(Some)
+            if word == "include" {
+                let rest = try!(self.get_rest(line, start_index));
+                self.include_command(rest)
+            }
+            else {
+                let command =
+                    if word == "set" {
+                        let rest = try!(self.get_rest(line, start_index));
+                        self.set_command(rest)
+                    }
+                    else if end3 == "map" && self.config.mapping_modes.contains(&start3.to_string()) {
+                        let rest = try!(self.get_rest(line, start_index));
+                        self.map_command(rest, start3)
+                    }
+                    else if end5 == "unmap" && self.config.mapping_modes.contains(&start5.to_string()) {
+                        let rest = try!(self.get_rest(line, start_index));
+                        self.unmap_command(rest, start5)
+                    }
+                    else {
+                        self.custom_command(line, word, start_index, index)
+                    };
+                command.map(|command| vec![command])
+            }
         }
         else {
-            Ok(None)
+            Ok(vec![])
         }
     }
 
     /// Parse an include command.
-    fn include_command(&mut self, line: &str) -> Result<Command<T>> {
+    fn include_command(&mut self, line: &str) -> Result<Vec<Command<T>>> {
         let word = word(line);
         // NOTE: the line contains the word, hence unwrap.
         let index = line.find(word).unwrap();
         let after_index = index + word.len() + 1;
         self.column += after_index;
         try!(self.check_eol(line, after_index));
-        Ok(Include(word.to_string()))
+        let path = Path::new(&self.include_path).join(word);
+        let file = try!(File::open(path));
+        let buf_reader = BufReader::new(file);
+        let commands = try!(self.parse(buf_reader));
+        Ok(commands)
     }
 
     /// Parse a map command.
@@ -294,9 +303,8 @@ impl<T: EnumFromStr> Parser<T> {
         let mut commands = vec![];
         for (line_num, input_line) in input.lines().enumerate() {
             self.line = line_num + 1;
-            if let Some(command) = try!(self.line(&try!(input_line))) {
-                commands.push(command);
-            }
+            let mut new_commands = try!(self.line(&try!(input_line)));
+            commands.append(&mut new_commands);
         }
         Ok(commands)
     }
@@ -347,6 +355,11 @@ impl<T: EnumFromStr> Parser<T> {
                 Pos::new(self.line, self.column + line.len()),
             )))
         }
+    }
+
+    /// Set the directory where the include command will look for files to include.
+    pub fn set_include_path(&mut self, directory: &str) {
+        self.include_path = directory.to_string();
     }
 
     /// Parse an unmap command.
