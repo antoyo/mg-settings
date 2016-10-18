@@ -45,7 +45,7 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::marker::PhantomData;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use error::{Error, Result};
 use error::ErrorType::{MissingArgument, NoCommand, Parse, UnknownCommand};
@@ -124,7 +124,7 @@ pub struct Config {
 pub struct Parser<T> {
     column: usize,
     config: Config,
-    include_path: String,
+    include_path: PathBuf,
     line: usize,
     _phantom: PhantomData<T>,
 }
@@ -135,7 +135,7 @@ impl<T: EnumFromStr> Parser<T> {
         Parser {
             column: 1,
             config: Config::default(),
-            include_path: "./".to_string(),
+            include_path: Path::new("./").to_path_buf(),
             line: 1,
             _phantom: PhantomData,
         }
@@ -146,7 +146,7 @@ impl<T: EnumFromStr> Parser<T> {
         Parser {
             column: 1,
             config: config,
-            include_path: "./".to_string(),
+            include_path: Path::new("./").to_path_buf(),
             line: 1,
             _phantom: PhantomData,
         }
@@ -358,8 +358,8 @@ impl<T: EnumFromStr> Parser<T> {
     }
 
     /// Set the directory where the include command will look for files to include.
-    pub fn set_include_path(&mut self, directory: &str) {
-        self.include_path = directory.to_string();
+    pub fn set_include_path<P: AsRef<Path>>(&mut self, directory: P) {
+        self.include_path = directory.as_ref().to_path_buf();
     }
 
     /// Parse an unmap command.
