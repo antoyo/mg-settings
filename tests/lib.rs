@@ -36,16 +36,18 @@ use CustomCommand::*;
 enum CustomCommand {
     Open(String),
     Quit,
+    WinOpen(String),
 }
 
 type CommandParser = Parser<CustomCommand>;
 
 #[test]
 fn commands_macro() {
-    assert_eq!(Ok(Quit), CustomCommand::create("Quit", ""));
-    assert_eq!(Ok(Open("crates.io".to_string())), CustomCommand::create("Open", "crates.io"));
-    assert_eq!(Ok(Quit), CustomCommand::create("Quit", "crates.io"));
-    assert_eq!(Err("unknown command ope".to_string()), CustomCommand::create("Ope", ""));
+    assert_eq!(Ok(Quit), CustomCommand::create("quit", ""));
+    assert_eq!(Ok(Open("crates.io".to_string())), CustomCommand::create("open", "crates.io"));
+    assert_eq!(Ok(WinOpen("crates.io".to_string())), CustomCommand::create("win-open", "crates.io"));
+    assert_eq!(Ok(Quit), CustomCommand::create("quit", "crates.io"));
+    assert_eq!(Err("unknown command ope".to_string()), CustomCommand::create("ope", ""));
 }
 
 #[test]
@@ -58,6 +60,7 @@ fn comments() {
 fn custom_commands() {
     assert_eq!(parse_string("quit"), vec![Custom(Quit)]);
     assert_eq!(parse_string("open crates.io"), vec![Custom(Open("crates.io".to_string()))]);
+    assert_eq!(parse_string("win-open crates.io"), vec![Custom(WinOpen("crates.io".to_string()))]);
     assert_eq!(parse_string("open   crates.io  "), vec![Custom(Open("crates.io".to_string()))]);
     assert_eq!(parse_string("  open   crates.io  "), vec![Custom(Open("crates.io".to_string()))]);
 }

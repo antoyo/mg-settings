@@ -33,8 +33,7 @@ pub fn commands(input: TokenStream) -> TokenStream {
 /// Expand the required traits for the derive Commands attribute.
 fn expand_commands_enum(mut ast: MacroInput) -> Tokens {
     let variant_info = transform_enum(&mut ast.body);
-    let variant_names = &variant_info.names;
-    let variant_values = variant_names.iter()
+    let variant_values = variant_info.names.iter()
         .zip(&variant_info.has_argument)
         .map(|(name, &has_argument)| {
             let ident = Ident::new(name.as_ref());
@@ -50,18 +49,23 @@ fn expand_commands_enum(mut ast: MacroInput) -> Tokens {
                 }
             }
         });
+    let variant_names: Vec<_> = variant_info.names.iter()
+        .map(|name| to_dash_name(&name))
+        .collect();
     let metadata = variant_names.iter()
         .zip(&variant_info.hidden)
         .zip(&variant_info.descriptions)
         .map(|((name, &is_hidden), description)| {
+            let name = to_dash_name(name);
             quote! {
-                (#name.to_lowercase(), ::mg_settings::CommandMetaData {
+                (#name.to_string(), ::mg_settings::CommandMetaData {
                     completion_hidden: #is_hidden,
                     help_text: #description.to_string(),
                     is_special_command: false,
                 })
             }
         });
+    let variant_names = &variant_names;
     let variant_has_argument = &variant_info.has_argument;
     let name = ast.ident.clone();
     quote! {
@@ -71,14 +75,14 @@ fn expand_commands_enum(mut ast: MacroInput) -> Tokens {
             fn create(variant: &str, argument: &str) -> ::std::result::Result<#name, String> {
                 match variant {
                     #(#variant_names => Ok(#variant_values),)*
-                    _ => Err(format!("unknown command {}", variant.to_lowercase())),
+                    _ => Err(format!("unknown command {}", variant)),
                 }
             }
 
             fn has_argument(variant: &str) -> ::std::result::Result<bool, String> {
                 match variant {
                     #(#variant_names => Ok(#variant_has_argument),)*
-                    _ => Err(format!("unknown command {}", variant.to_lowercase())),
+                    _ => Err(format!("unknown command {}", variant)),
                 }
             }
         }
@@ -91,6 +95,20 @@ fn expand_commands_enum(mut ast: MacroInput) -> Tokens {
             }
         }
     }
+}
+
+/// Transform a camel case command name to its dashed version.
+/// WinOpen is transformed to win-open.
+fn to_dash_name(name: &str) -> String {
+    let mut result = String::new();
+    for (index, character) in name.chars().enumerate() {
+        let string: String = character.to_lowercase().collect();
+        if character.is_uppercase() && index > 0 {
+            result.push('-');
+        }
+        result.push_str(&string);
+    }
+    result
 }
 
 /// Remove the attributes from the variants and return the metadata gathered from the attributes.

@@ -168,18 +168,17 @@ impl<T: EnumFromStr> Parser<T> {
 
     /// Parse a custom command or return an error if it does not exist.
     fn custom_command(&self, line: &str, word: &str, start_index: usize, index: usize) -> Result<Command<T>> {
-        let variant = &word.capitalize();
         let args =
             if line.len() > start_index {
                 line[start_index..].trim()
             }
-            else if let Ok(true) = T::has_argument(variant) {
+            else if let Ok(true) = T::has_argument(word) {
                 return Err(Box::new(self.missing_args(start_index)));
             }
             else {
                 ""
             };
-        if let Ok(command) = T::create(variant, args) {
+        if let Ok(command) = T::create(word, args) {
             Ok(Custom(command))
         }
         else {
