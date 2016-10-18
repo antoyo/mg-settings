@@ -19,8 +19,11 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#[macro_use]
+#![feature(proc_macro)]
+
 extern crate mg_settings;
+#[macro_use]
+extern crate mg_settings_macros;
 
 use mg_settings::{Config, EnumFromStr, Parser};
 use mg_settings::Command::{self, Custom, Include, Map, Set, Unmap};
@@ -29,10 +32,11 @@ use mg_settings::Value::{Bool, Float, Int, Str};
 
 use CustomCommand::*;
 
-commands!(CustomCommand {
+#[derive(Commands, Debug, PartialEq)]
+enum CustomCommand {
     Open(String),
     Quit,
-});
+}
 
 type CommandParser = Parser<CustomCommand>;
 

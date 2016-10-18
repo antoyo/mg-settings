@@ -26,8 +26,7 @@
 //! Call the `parse` function on the input.
 
 /*
- * TODO: support attributes like #[special_command], #[completion(hidden)] and #[help(Quit the application)] in the
- * commands! macro.
+ * TODO: add the attribute #[special_command] in the Command derive macro.
  * TODO: create a new method instead of using words and find/unwrap.
  * TODO: Add array type.
  */
@@ -42,6 +41,7 @@ mod macros;
 pub mod position;
 mod string;
 
+use std::collections::HashMap;
 use std::io::BufRead;
 use std::marker::PhantomData;
 
@@ -54,6 +54,17 @@ use string::StrExt;
 use Command::*;
 use Value::*;
 
+/// Command meta-data coming from the attributes.
+/// See `EnumMetaData` to see the list of supported attributes.
+pub struct CommandMetaData {
+    /// Whether this command should be shown in the completion or not.
+    pub completion_hidden: bool,
+    /// The help text associated with this command.
+    pub help_text: String,
+    /// Whether this is a special command or not.
+    pub is_special_command: bool,
+}
+
 /// The `EnumFromStr` trait is used to specify how to construct an enum value from a string.
 pub trait EnumFromStr
     where Self: Sized
@@ -65,34 +76,14 @@ pub trait EnumFromStr
     fn has_argument(variant: &str) -> std::result::Result<bool, String>;
 }
 
-#[macro_export]
-macro_rules! commands {
-    ($name:ident { $($command:ident $(($param:ident))*),* $(,)* }) => {
-        #[derive(Debug, PartialEq)]
-        pub enum $name {
-            $($command $(($param))*),*
-        }
-
-        impl mg_settings::EnumFromStr for $name {
-            fn create(variant: &str, argument: &str) -> ::std::result::Result<$name, String> {
-                match variant {
-                    $(stringify!($command) =>
-                        Ok($command $(({ let _ = $param::default(); argument.to_string() }))*)
-                    ,)*
-                    _ => Err(format!("unknown command {}", variant.to_lowercase())),
-                }
-            }
-
-            fn has_argument(variant: &str) -> ::std::result::Result<bool, String> {
-                match variant {
-                    $(stringify!($command) =>
-                        Ok([$({ let _ = $param::default(); true },)* false][0])
-                    ,)*
-                    _ => Err(format!("unknown command {}", variant.to_lowercase())),
-                }
-            }
-        }
-    };
+/// Tre `EnumMetaData` trait is used to get associated meta-data for the enum variants.
+/// The meta-data is specified using the following attributes:
+/// #[completion(hidden)]
+/// #[special_command]
+/// #[help(Command help)]
+pub trait EnumMetaData {
+    /// Get the metadata associated with the enum.
+    fn get_metadata() -> HashMap<String, CommandMetaData>;
 }
 
 /// The `Command` enum represents a command from a config file.

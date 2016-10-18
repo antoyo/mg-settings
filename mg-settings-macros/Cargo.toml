@@ -1,0 +1,11 @@
+[package]
+name = "mg-settings-macros"
+version = "0.0.1"
+authors = ["Antoni Boucher <bouanto@zoho.com>"]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "^0.3"
+syn = "^0.9"
