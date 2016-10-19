@@ -27,13 +27,11 @@ use syn::Ty;
 use string::snake_to_camel;
 
 /// Expand the required traits for the derive Settings attribute.
-pub fn expand_settings_enum(mut ast: MacroInput) -> Tokens {
-    let original_name = ast.ident.clone();
-    let variant_name = Ident::new(format!("{}Variant", original_name));
-    ast.ident = Ident::new(format!("_{}", original_name));
+pub fn expand_settings_enum(ast: MacroInput) -> Tokens {
     let name = ast.ident.clone();
-    let variant_enum = to_enums(&original_name, &ast.ident, &variant_name, &ast.body);
-    let settings_impl = to_settings_impl(&original_name, &name, &variant_name, &ast.body);
+    let variant_name = Ident::new(format!("{}Variant", name));
+    let variant_enum = to_enums(&ast.ident, &variant_name, &ast.body);
+    let settings_impl = to_settings_impl(&name, &variant_name, &ast.body);
     quote! {
         #[derive(Default)]
         #ast
@@ -45,7 +43,7 @@ pub fn expand_settings_enum(mut ast: MacroInput) -> Tokens {
 }
 
 /// Create the variant enums for getters and setters.
-fn to_enums(original_name: &Ident, new_name: &Ident, variant_name: &Ident, settings_struct: &Body) -> Tokens {
+fn to_enums(name: &Ident, variant_name: &Ident, settings_struct: &Body) -> Tokens {
     if let &Struct(VariantData::Struct(ref strct)) = settings_struct {
         let mut field_names = vec![];
         let mut names = vec![];
@@ -58,35 +56,16 @@ fn to_enums(original_name: &Ident, new_name: &Ident, variant_name: &Ident, setti
                 types.push(field.ty.clone());
             }
         }
-        let string_names = field_names.iter()
-            .map(|ident| ident.to_string().replace("_", "-"));
         let names1 = &names;
-        let names2 = &names;
-        let qualified_names = names.iter()
-            .map(|ident| quote! {
-                #original_name::#ident
-            });
         quote! {
             #[derive(Clone)]
             pub enum #variant_name {
                 #(#names1(#types)),*
             }
 
-            pub enum #original_name {
-                #(#names2),*
-            }
-
-            impl ::std::fmt::Display for #original_name {
-                fn fmt(&self, formatter: &mut ::std::fmt::Formatter) -> ::std::result::Result<(), ::std::fmt::Error> {
-                    match *self {
-                        #(#qualified_names => write!(formatter, #string_names)),*
-                    }
-                }
-            }
-
-            impl #original_name {
-                pub fn new() -> #new_name {
-                    #new_name::default()
+            impl #name {
+                pub fn new() -> #name {
+                    #name::default()
                 }
             }
         }
@@ -97,7 +76,7 @@ fn to_enums(original_name: &Ident, new_name: &Ident, variant_name: &Ident, setti
 }
 
 /// Create the impl Settings.
-fn to_settings_impl(original_name: &Ident, name: &Ident, variant_name: &Ident, settings_struct: &Body) -> Tokens {
+fn to_settings_impl(name: &Ident, variant_name: &Ident, settings_struct: &Body) -> Tokens {
     if let &Struct(VariantData::Struct(ref strct)) = settings_struct {
         let mut names = vec![];
         let mut capitalized_names = vec![];
@@ -145,7 +124,7 @@ fn to_settings_impl(original_name: &Ident, name: &Ident, variant_name: &Ident, s
         };
 
         let to_variant_fn = quote! {
-            fn to_variant(name: &str, value: ::mg_settings::Value) -> Result<Self::VariantSet, ::mg_settings::error::SettingError> {
+            fn to_variant(name: &str, value: ::mg_settings::Value) -> Result<Self::Variant, ::mg_settings::error::SettingError> {
                 match name {
                     #to_variant_fn_variant
                     _ => Err(::mg_settings::error::SettingError::UnknownSetting(name.to_string())),
@@ -153,21 +132,24 @@ fn to_settings_impl(original_name: &Ident, name: &Ident, variant_name: &Ident, s
             }
         };
 
+        let get_fn = quote! {
+            fn get(&self, name: &str) -> Option<::mg_settings::Value> {
+                match name {
+                    #(#string_names => Some(::mg_settings::Value::#types1(self.#names2.clone())),)*
+                    _ => None,
+                }
+            }
+        };
+
         quote! {
             impl ::mg_settings::settings::Settings for #name {
-                type VariantGet = #original_name;
-                type VariantSet = #variant_name;
+                type Variant = #variant_name;
 
-                fn get(&self, name: &str) -> Option<::mg_settings::Value> {
-                    match name {
-                        #(#string_names => Some(::mg_settings::Value::#types1(self.#names2.clone())),)*
-                        _ => None,
-                    }
-                }
+                #get_fn
 
                 #to_variant_fn
 
-                fn set_value(&mut self, value: Self::VariantSet) {
+                fn set_value(&mut self, value: Self::Variant) {
                     match value {
                         #(#capitalized_names(#names1) => {
                             self.#names2 = #names3
