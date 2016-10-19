@@ -221,21 +221,21 @@ impl<T: EnumFromStr> Parser<T> {
             }
 
             if word == "include" {
-                let rest = try!(self.get_rest(line, start_index));
+                let rest = self.get_rest(line, start_index)?;
                 self.include_command(rest)
             }
             else {
                 let command =
                     if word == "set" {
-                        let rest = try!(self.get_rest(line, start_index));
+                        let rest = self.get_rest(line, start_index)?;
                         self.set_command(rest)
                     }
                     else if end3 == "map" && self.config.mapping_modes.contains(&start3.to_string()) {
-                        let rest = try!(self.get_rest(line, start_index));
+                        let rest = self.get_rest(line, start_index)?;
                         self.map_command(rest, start3)
                     }
                     else if end5 == "unmap" && self.config.mapping_modes.contains(&start5.to_string()) {
-                        let rest = try!(self.get_rest(line, start_index));
+                        let rest = self.get_rest(line, start_index)?;
                         self.unmap_command(rest, start5)
                     }
                     else {
@@ -256,11 +256,11 @@ impl<T: EnumFromStr> Parser<T> {
         let index = line.find(word).unwrap();
         let after_index = index + word.len() + 1;
         self.column += after_index;
-        try!(self.check_eol(line, after_index));
+        self.check_eol(line, after_index)?;
         let path = Path::new(&self.include_path).join(word);
-        let file = try!(File::open(path));
+        let file = File::open(path)?;
         let buf_reader = BufReader::new(file);
-        let commands = try!(self.parse(buf_reader));
+        let commands = self.parse(buf_reader)?;
         Ok(commands)
     }
 
@@ -275,7 +275,7 @@ impl<T: EnumFromStr> Parser<T> {
         if !rest.is_empty() {
             Ok(Map {
                 action: rest.to_string(),
-                keys: try!(parse_keys(word, self.line, self.column + index)),
+                keys: parse_keys(word, self.line, self.column + index)?,
                 mode: mode.to_string(),
             })
         }
@@ -304,7 +304,7 @@ impl<T: EnumFromStr> Parser<T> {
         let mut commands = vec![];
         for (line_num, input_line) in input.lines().enumerate() {
             self.line = line_num + 1;
-            let mut new_commands = try!(self.line(&try!(input_line)));
+            let mut new_commands = self.line(&input_line?)?;
             commands.append(&mut new_commands);
         }
         Ok(commands)
@@ -312,7 +312,7 @@ impl<T: EnumFromStr> Parser<T> {
 
     /// Parse a single line of settings.
     pub fn parse_line(&mut self, line: &str) -> Result<Command<T>> {
-        let mut commands = try!(self.parse(line.as_bytes()));
+        let mut commands = self.parse(line.as_bytes())?;
         match commands.pop() {
             Some(command) => Ok(command),
             None => Err(Box::new(Error::new(
@@ -329,7 +329,7 @@ impl<T: EnumFromStr> Parser<T> {
         if let Some(words) = words(line, 2) {
             // NOTE: the line contains the word, hence unwrap.
             let index = line.find(words[0]).unwrap();
-            let identifier = try!(check_ident(words[0].to_string(), &Pos::new(self.line, self.column + index)));
+            let identifier = check_ident(words[0].to_string(), &Pos::new(self.line, self.column + index))?;
 
             let operator = words[1];
             // NOTE: the operator is in the line, hence unwrap.
@@ -337,7 +337,7 @@ impl<T: EnumFromStr> Parser<T> {
             if operator == "=" {
                 let rest = &line[operator_index + 1..];
                 self.column += operator_index + 1;
-                Ok(Set(identifier.to_string(), try!(self.value(rest))))
+                Ok(Set(identifier.to_string(), self.value(rest)?))
             }
             else {
                 Err(Box::new(Error::new(
@@ -372,9 +372,9 @@ impl<T: EnumFromStr> Parser<T> {
 
         let after_index = index + word.len() + 1;
         self.column += after_index;
-        try!(self.check_eol(line, after_index));
+        self.check_eol(line, after_index)?;
         Ok(Unmap {
-            keys: try!(parse_keys(word, self.line, self.column + index)),
+            keys: parse_keys(word, self.line, self.column + index)?,
             mode: mode.to_string(),
         })
     }

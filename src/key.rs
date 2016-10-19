@@ -153,7 +153,7 @@ pub fn parse_keys(mut input: &str, line_num: usize, column_num: usize) -> Result
     let mut keys = vec![];
     let mut index = 0;
     while !input.is_empty() {
-        let (key, size) = try!(parse_key(input, line_num, column_num + index));
+        let (key, size) = parse_key(input, line_num, column_num + index)?;
         keys.push(key);
         input = &input[size..];
         index += size;
