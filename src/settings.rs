@@ -26,17 +26,21 @@ use super::Value;
 
 /// Settings manager.
 pub trait Settings
-    where Self::Variant: Clone
+    where Self::VariantGet: ToString,
+          Self::VariantSet: Clone,
 {
-    /// The variant enum representing the settings.
-    type Variant;
+    /// The variant enum representing the setting getters.
+    type VariantGet;
+
+    /// The variant enum representing the setting setters.
+    type VariantSet;
 
     /// Get a setting value.
     fn get(&self, name: &str) -> Option<Value>;
 
     /// Set a setting value from its variant.
-    fn set_value(&mut self, value: Self::Variant);
+    fn set_value(&mut self, value: Self::VariantSet);
 
     /// Convert a name and value to a variant.
-    fn to_variant(name: &str, value: Value) -> Result<Self::Variant, SettingError>;
+    fn to_variant(name: &str, value: Value) -> Result<Self::VariantSet, SettingError>;
 }
