@@ -19,36 +19,25 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#![feature(proc_macro, proc_macro_lib)]
-
-extern crate proc_macro;
-#[macro_use]
-extern crate quote;
-extern crate syn;
-
-mod commands;
-mod settings;
-mod string;
-
-use proc_macro::TokenStream;
-
-use commands::expand_commands_enum;
-use settings::expand_settings_enum;
-
-#[proc_macro_derive(Commands)]
-/// Derive Commands.
-pub fn commands(input: TokenStream) -> TokenStream {
-    let source = input.to_string();
-    let ast = syn::parse_macro_input(&source).unwrap();
-    let expanded = expand_commands_enum(ast);
-    expanded.to_string().parse().unwrap()
+/// Capitalize a string.
+pub fn capitalize(string: &str) -> String {
+    let mut chars = string.chars();
+    match chars.next() {
+        None => String::new(),
+        Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+    }
 }
 
-#[proc_macro_derive(Settings)]
-/// Derive Settings.
-pub fn settings(input: TokenStream) -> TokenStream {
-    let source = input.to_string();
-    let ast = syn::parse_macro_input(&source).unwrap();
-    let expanded = expand_settings_enum(ast);
-    expanded.to_string().parse().unwrap()
+/// Transform a camel case command name to its dashed version.
+/// WinOpen is transformed to win-open.
+pub fn to_dash_name(name: &str) -> String {
+    let mut result = String::new();
+    for (index, character) in name.chars().enumerate() {
+        let string: String = character.to_lowercase().collect();
+        if character.is_uppercase() && index > 0 {
+            result.push('-');
+        }
+        result.push_str(&string);
+    }
+    result
 }

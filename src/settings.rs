@@ -19,36 +19,24 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#![feature(proc_macro, proc_macro_lib)]
+//! Settings manager.
 
-extern crate proc_macro;
-#[macro_use]
-extern crate quote;
-extern crate syn;
+use error::SettingError;
+use super::Value;
 
-mod commands;
-mod settings;
-mod string;
+/// Settings manager.
+pub trait Settings
+    where Self::Variant: Clone
+{
+    /// The variant enum representing the settings.
+    type Variant;
 
-use proc_macro::TokenStream;
+    /// Get a setting value.
+    fn get(&self, name: &str) -> Option<Value>;
 
-use commands::expand_commands_enum;
-use settings::expand_settings_enum;
+    /// Set a setting value from its variant.
+    fn set_value(&mut self, value: Self::Variant);
 
-#[proc_macro_derive(Commands)]
-/// Derive Commands.
-pub fn commands(input: TokenStream) -> TokenStream {
-    let source = input.to_string();
-    let ast = syn::parse_macro_input(&source).unwrap();
-    let expanded = expand_commands_enum(ast);
-    expanded.to_string().parse().unwrap()
-}
-
-#[proc_macro_derive(Settings)]
-/// Derive Settings.
-pub fn settings(input: TokenStream) -> TokenStream {
-    let source = input.to_string();
-    let ast = syn::parse_macro_input(&source).unwrap();
-    let expanded = expand_settings_enum(ast);
-    expanded.to_string().parse().unwrap()
+    /// Convert a name and value to a variant.
+    fn to_variant(name: &str, value: Value) -> Result<Self::Variant, SettingError>;
 }

@@ -19,6 +19,10 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+use error::{Error, Result};
+use error::ErrorType::Parse;
+use position::Pos;
+
 pub trait StrExt<'a> {
     fn capitalize(&self) -> String;
     fn rsplit_at(&'a self, index: usize) -> (&'a str, &'a str);
@@ -40,5 +44,40 @@ impl<'a> StrExt<'a> for &'a str {
         else {
             ("", "")
         }
+    }
+}
+
+/// Check if a string is an identifier.
+pub fn check_ident(string: String, pos: &Pos) -> Result<String> {
+    if string.chars().all(|character| character.is_alphanumeric() || character == '-' || character == '_') {
+        if let Some(true) = string.chars().next().map(|character| character.is_alphabetic()) {
+            return Ok(string)
+        }
+    }
+    Err(Box::new(Error::new(Parse, string, "identifier".to_string(), pos.clone())))
+}
+
+/// Parse a single word.
+pub fn maybe_word(input: &str) -> Option<&str> {
+    input.split_whitespace()
+        .next()
+}
+
+/// Parse a single word.
+/// This function assumes there is always at least a word in `input`.
+pub fn word(input: &str) -> &str {
+    input.split_whitespace()
+        .next()
+        .unwrap()
+}
+
+/// Parse a `count` words.
+pub fn words(input: &str, count: usize) -> Option<Vec<&str>> {
+    let vec: Vec<_> = input.split_whitespace().take(count).collect();
+    if vec.len() == count {
+        Some(vec)
+    }
+    else {
+        None
     }
 }

@@ -39,6 +39,7 @@ pub mod key;
 mod macros;
 #[doc(hidden)]
 pub mod position;
+pub mod settings;
 mod string;
 
 use std::collections::HashMap;
@@ -51,7 +52,7 @@ use error::{Error, Result};
 use error::ErrorType::{MissingArgument, NoCommand, Parse, UnknownCommand};
 use key::{Key, parse_keys};
 use position::Pos;
-use string::StrExt;
+use string::{StrExt, check_ident, maybe_word, word, words};
 
 use Command::*;
 use Value::*;
@@ -421,37 +422,14 @@ pub enum Value {
     Str(String),
 }
 
-/// Check if a string is an identifier.
-fn check_ident(string: String, pos: &Pos) -> Result<String> {
-    if string.chars().all(|character| character.is_alphanumeric() || character == '-' || character == '_') {
-        if let Some(true) = string.chars().next().map(|character| character.is_alphabetic()) {
-            return Ok(string)
+impl Value {
+    /// Get a string representation of the value.
+    pub fn to_type(&self) -> &str {
+        match *self {
+            Bool(_) => "bool",
+            Float(_) => "float",
+            Int(_) => "int",
+            Str(_) => "string",
         }
-    }
-    Err(Box::new(Error::new(Parse, string, "identifier".to_string(), pos.clone())))
-}
-
-/// Parse a single word.
-fn maybe_word(input: &str) -> Option<&str> {
-    input.split_whitespace()
-        .next()
-}
-
-/// Parse a single word.
-/// This function assumes there is always at least a word in `input`.
-fn word(input: &str) -> &str {
-    input.split_whitespace()
-        .next()
-        .unwrap()
-}
-
-/// Parse a `count` words.
-fn words(input: &str, count: usize) -> Option<Vec<&str>> {
-    let vec: Vec<_> = input.split_whitespace().take(count).collect();
-    if vec.len() == count {
-        Some(vec)
-    }
-    else {
-        None
     }
 }

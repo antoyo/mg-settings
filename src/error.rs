@@ -23,8 +23,10 @@
 
 use std::error;
 use std::fmt::{self, Display, Formatter};
+use std::result;
 
 use position::Pos;
+use self::SettingError::*;
 
 /// Struct which holds information about an error at a specific position.
 #[derive(Debug, PartialEq)]
@@ -73,6 +75,38 @@ pub enum ErrorType {
     Parse,
     /// Unknown command.
     UnknownCommand,
+}
+
+/// Error when getting/setting settings.
+#[derive(Debug)]
+pub enum SettingError {
+    /// Unknown setting name.
+    UnknownSetting(String),
+    /// Wrong value type for setting.
+    WrongType {
+        /// The actual type.
+        actual: String,
+        /// The expected type.
+        expected: String,
+    },
+}
+
+impl Display for SettingError {
+    fn fmt(&self, formatter: &mut Formatter) -> result::Result<(), fmt::Error> {
+        match *self {
+            UnknownSetting(ref name) => write!(formatter, "no setting named {}", name),
+            WrongType { ref actual, ref expected } => write!(formatter, "wrong value type: expecting {}, but found {}", expected, actual),
+        }
+    }
+}
+
+impl error::Error for SettingError {
+    fn description(&self) -> &str {
+        match *self {
+            UnknownSetting(_) => "unknown setting name",
+            WrongType { .. } => "wrong value type",
+        }
+    }
 }
 
 /// A type alias over the specific `Result` type used by the parser to indicate whether it is
