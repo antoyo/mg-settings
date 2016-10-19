@@ -19,13 +19,31 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/// Capitalize a string.
-pub fn capitalize(string: &str) -> String {
+/// Convert a snake case string to a camel case.
+pub fn snake_to_camel(string: &str) -> String {
     let mut chars = string.chars();
-    match chars.next() {
-        None => String::new(),
-        Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+    let string =
+        match chars.next() {
+            None => String::new(),
+            Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+        };
+    let mut camel = String::new();
+    let mut underscore = false;
+    for character in string.chars() {
+        if character == '_' {
+            underscore = true;
+        }
+        else {
+            if underscore {
+                camel.push_str(&character.to_uppercase().collect::<String>());
+            }
+            else {
+                camel.push(character);
+            }
+            underscore = false;
+        }
     }
+    camel
 }
 
 /// Transform a camel case command name to its dashed version.

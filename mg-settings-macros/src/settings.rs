@@ -24,7 +24,7 @@ use syn::{Body, Ident, MacroInput, Path, VariantData};
 use syn::Body::Struct;
 use syn::Ty;
 
-use string::capitalize;
+use string::snake_to_camel;
 
 /// Expand the required traits for the derive Settings attribute.
 pub fn expand_settings_enum(ast: MacroInput) -> Tokens {
@@ -55,7 +55,7 @@ fn to_enum(variant_name: &Ident, settings_struct: &Body) -> Tokens {
         let mut types = vec![];
         for field in strct {
             if let Some(ref ident) = field.ident {
-                let ident = Ident::new(capitalize(&ident.to_string()));
+                let ident = Ident::new(snake_to_camel(&ident.to_string()));
                 names.push(ident);
                 types.push(field.ty.clone());
             }
@@ -83,7 +83,7 @@ fn to_settings_impl(name: &Ident, variant_name: &Ident, settings_struct: &Body) 
                 let ident_string = ident.to_string();
                 let ident = Ident::new(ident_string.clone());
                 names.push(ident);
-                let ident = Ident::new(capitalize(&ident_string));
+                let ident = Ident::new(snake_to_camel(&ident_string));
                 capitalized_names.push(ident);
 
                 if let Ty::Path(_, Path { ref segments, .. }) = field.ty {
@@ -92,7 +92,7 @@ fn to_settings_impl(name: &Ident, variant_name: &Ident, settings_struct: &Body) 
             }
         }
         let string_names: Vec<_> = names.iter()
-            .map(|ident| ident.to_string())
+            .map(|ident| ident.to_string().replace("_", "-"))
             .collect();
         let string_names = &string_names;
         let capitalized_names = &capitalized_names;
