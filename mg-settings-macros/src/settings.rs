@@ -68,11 +68,11 @@ fn to_enums(original_name: &Ident, new_name: &Ident, variant_name: &Ident, setti
             });
         quote! {
             #[derive(Clone)]
-            enum #variant_name {
+            pub enum #variant_name {
                 #(#names1(#types)),*
             }
 
-            enum #original_name {
+            pub enum #original_name {
                 #(#names2),*
             }
 
@@ -108,7 +108,10 @@ fn to_settings_impl(original_name: &Ident, name: &Ident, variant_name: &Ident, s
                 let ident = Ident::new(ident_string.clone());
                 names.push(ident);
                 let ident = Ident::new(snake_to_camel(&ident_string));
-                capitalized_names.push(ident);
+                capitalized_names.push(
+                    quote! {
+                        #variant_name::#ident
+                    });
 
                 if let Ty::Path(_, Path { ref segments, .. }) = field.ty {
                     types.push(to_value_type(&segments[0].ident));
