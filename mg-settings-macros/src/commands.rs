@@ -39,19 +39,20 @@ struct VariantInfo {
 /// Expand the required traits for the derive Commands attribute.
 pub fn expand_commands_enum(mut ast: MacroInput) -> Tokens {
     let variant_info = transform_enum(&mut ast.body);
+    let name = ast.ident.clone();
     let variant_values = variant_info.names.iter()
         .zip(&variant_info.has_argument)
-        .map(|(name, &has_argument)| {
-            let ident = Ident::new(name.as_ref());
+        .map(|(variant_name, &has_argument)| {
+            let ident = Ident::new(variant_name.as_ref());
             let arg_ident = Ident::new("argument");
             if has_argument {
                 quote! {
-                    #ident(#arg_ident.to_string())
+                    #name::#ident(#arg_ident.to_string())
                 }
             }
             else {
                 quote! {
-                    #ident
+                    #name::#ident
                 }
             }
         });
@@ -73,7 +74,6 @@ pub fn expand_commands_enum(mut ast: MacroInput) -> Tokens {
         });
     let variant_names = &variant_names;
     let variant_has_argument = &variant_info.has_argument;
-    let name = ast.ident.clone();
     quote! {
         #ast
 
