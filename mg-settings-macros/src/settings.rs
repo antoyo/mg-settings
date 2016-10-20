@@ -20,20 +20,32 @@
  */
 
 use quote::Tokens;
-use syn::{Body, Ident, MacroInput, Path, VariantData};
+use syn::{Attribute, Body, Ident, MacroInput, Path, VariantData};
 use syn::Body::{Enum, Struct};
+use syn::MetaItem::Word;
 use syn::Ty;
 
 use string::{snake_to_camel, to_dash_name};
 
 /// Expand the required trais for the derive Setting attribute.
-pub fn expand_setting_enum(ast: MacroInput) -> Tokens {
+pub fn expand_setting_enum(mut ast: MacroInput) -> Tokens {
     let name = ast.ident.clone();
+    let mut default = None;
 
     let mut variant_names = vec![];
-    if let Enum(ref variants) = ast.body {
+    if let Enum(ref mut variants) = ast.body {
         for variant in variants {
-            variant_names.push(&variant.ident);
+            variant_names.push(variant.ident.clone());
+            if !variant.attrs.is_empty() {
+                for attribute in &variant.attrs {
+                    if let &Attribute { value: Word(ref ident), .. } = attribute {
+                        if ident == "default" {
+                            default = Some(variant.ident.clone());
+                        }
+                    }
+                }
+                variant.attrs.clear();
+            }
         }
     }
     let choice_names: Vec<_> = variant_names.iter()
@@ -54,9 +66,26 @@ pub fn expand_setting_enum(ast: MacroInput) -> Tokens {
         }
     };
 
+    let default_impl =
+        if let Some(ident) = default {
+            quote! {
+                impl Default for #name {
+                    fn default() -> Self {
+                        #ident
+                    }
+                }
+            }
+        }
+        else {
+            quote! {
+            }
+        };
+
     quote! {
         #[derive(Clone)]
         #ast
+
+        #default_impl
 
         impl ::std::str::FromStr for #name {
             type Err = ::mg_settings::error::SettingError;
