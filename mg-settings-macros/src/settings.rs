@@ -54,10 +54,15 @@ pub fn expand_setting_enum(mut ast: MacroInput) -> Tokens {
     let choice_names1 = &choice_names;
     let choice_names2 = &choice_names;
 
+    let qualified_names = variant_names.iter()
+        .map(|variant_name| quote! {
+            #name::#variant_name
+        });
+
     let from_str_fn = quote! {
         fn from_str(string: &str) -> Result<Self, Self::Err> {
             match string {
-                #(#choice_names1 => Ok(#variant_names),)*
+                #(#choice_names1 => Ok(#qualified_names),)*
                 _ => Err(::mg_settings::error::SettingError::UnknownChoice {
                     actual: string.to_string(),
                     expected: vec![#(#choice_names2),*],
