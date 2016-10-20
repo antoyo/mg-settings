@@ -33,7 +33,7 @@ mod string;
 use proc_macro::TokenStream;
 
 use commands::expand_commands_enum;
-use settings::expand_settings_enum;
+use settings::{expand_setting_enum, expand_settings_enum};
 
 #[proc_macro_derive(Commands)]
 /// Derive Commands.
@@ -41,6 +41,15 @@ pub fn commands(input: TokenStream) -> TokenStream {
     let source = input.to_string();
     let ast = syn::parse_macro_input(&source).unwrap();
     let expanded = expand_commands_enum(ast);
+    expanded.to_string().parse().unwrap()
+}
+
+#[proc_macro_derive(Setting)]
+/// Derive Setting.
+pub fn setting(input: TokenStream) -> TokenStream {
+    let source = input.to_string();
+    let ast = syn::parse_macro_input(&source).unwrap();
+    let expanded = expand_setting_enum(ast);
     expanded.to_string().parse().unwrap()
 }
 

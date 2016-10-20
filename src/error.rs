@@ -80,6 +80,13 @@ pub enum ErrorType {
 /// Error when getting/setting settings.
 #[derive(Debug)]
 pub enum SettingError {
+    /// Unknown setting value choice.
+    UnknownChoice {
+        /// The actual value.
+        actual: String,
+        /// The list of expected values.
+        expected: Vec<&'static str>,
+    },
     /// Unknown setting name.
     UnknownSetting(String),
     /// Wrong value type for setting.
@@ -94,6 +101,10 @@ pub enum SettingError {
 impl Display for SettingError {
     fn fmt(&self, formatter: &mut Formatter) -> result::Result<(), fmt::Error> {
         match *self {
+            UnknownChoice { ref actual, ref expected } => {
+                let expected = expected.join(", ");
+                write!(formatter, "unknown choice {}, expecting one of: {}", actual, expected)
+            },
             UnknownSetting(ref name) => write!(formatter, "no setting named {}", name),
             WrongType { ref actual, ref expected } => write!(formatter, "wrong value type: expecting {}, but found {}", expected, actual),
         }
@@ -103,6 +114,7 @@ impl Display for SettingError {
 impl error::Error for SettingError {
     fn description(&self) -> &str {
         match *self {
+            UnknownChoice { .. } => "unknown choice",
             UnknownSetting(_) => "unknown setting name",
             WrongType { .. } => "wrong value type",
         }

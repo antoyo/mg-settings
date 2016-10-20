@@ -31,9 +31,6 @@ pub trait Settings
     /// The variant enum representing the setting setters.
     type Variant;
 
-    /// Get a setting value.
-    fn get(&self, name: &str) -> Option<Value>;
-
     /// Set a setting value from its variant.
     fn set_value(&mut self, value: Self::Variant);
 

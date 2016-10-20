@@ -21,10 +21,50 @@
 
 use quote::Tokens;
 use syn::{Body, Ident, MacroInput, Path, VariantData};
-use syn::Body::Struct;
+use syn::Body::{Enum, Struct};
 use syn::Ty;
 
-use string::snake_to_camel;
+use string::{snake_to_camel, to_dash_name};
+
+/// Expand the required trais for the derive Setting attribute.
+pub fn expand_setting_enum(ast: MacroInput) -> Tokens {
+    let name = ast.ident.clone();
+
+    let mut variant_names = vec![];
+    if let Enum(ref variants) = ast.body {
+        for variant in variants {
+            variant_names.push(&variant.ident);
+        }
+    }
+    let choice_names: Vec<_> = variant_names.iter()
+        .map(|name| to_dash_name(&name.to_string()))
+        .collect();
+    let choice_names1 = &choice_names;
+    let choice_names2 = &choice_names;
+
+    let from_str_fn = quote! {
+        fn from_str(string: &str) -> Result<Self, Self::Err> {
+            match string {
+                #(#choice_names1 => Ok(#variant_names),)*
+                _ => Err(::mg_settings::error::SettingError::UnknownChoice {
+                    actual: string.to_string(),
+                    expected: vec![#(#choice_names2),*],
+                }),
+            }
+        }
+    };
+
+    quote! {
+        #[derive(Clone)]
+        #ast
+
+        impl ::std::str::FromStr for #name {
+            type Err = ::mg_settings::error::SettingError;
+
+            #from_str_fn
+        }
+    }
+}
 
 /// Expand the required traits for the derive Settings attribute.
 pub fn expand_settings_enum(ast: MacroInput) -> Tokens {
@@ -39,6 +79,14 @@ pub fn expand_settings_enum(ast: MacroInput) -> Tokens {
         #variant_enum
 
         #settings_impl
+    }
+}
+
+/// Check if a type is a custom type (including enum).
+fn is_custom_type(ident: &Ident) -> bool {
+    match ident.to_string().as_ref() {
+        "bool" | "f64" | "i64" | "String" => false,
+        _ => true,
     }
 }
 
@@ -80,6 +128,7 @@ fn to_settings_impl(name: &Ident, variant_name: &Ident, settings_struct: &Body) 
     if let &Struct(VariantData::Struct(ref strct)) = settings_struct {
         let mut names = vec![];
         let mut capitalized_names = vec![];
+        let mut original_types = vec![];
         let mut types = vec![];
         for field in strct {
             if let Some(ref ident) = field.ident {
@@ -93,6 +142,7 @@ fn to_settings_impl(name: &Ident, variant_name: &Ident, settings_struct: &Body) 
                     });
 
                 if let Ty::Path(_, Path { ref segments, .. }) = field.ty {
+                    original_types.push(&segments[0].ident);
                     types.push(to_value_type(&segments[0].ident));
                 }
             }
@@ -103,6 +153,17 @@ fn to_settings_impl(name: &Ident, variant_name: &Ident, settings_struct: &Body) 
         let string_names = &string_names;
         let capitalized_names = &capitalized_names;
         let names1 = &names;
+        let variant_exprs = names.iter().zip(original_types.iter())
+            .map(|(name, typ)|
+                 if is_custom_type(typ) {
+                     quote! {
+                         ::std::str::FromStr::from_str(&#name)?
+                     }
+                 }
+                 else {
+                     quote! { #name }
+                 }
+            );
         let names2 = &names;
         let names3 = &names;
         let types1 = &types;
@@ -112,7 +173,7 @@ fn to_settings_impl(name: &Ident, variant_name: &Ident, settings_struct: &Body) 
         let to_variant_fn_variant = quote! {
             #(#string_names => {
                 if let ::mg_settings::Value::#types1(#names1) = value {
-                    Ok(#capitalized_names(#names2))
+                    Ok(#capitalized_names(#variant_exprs))
                 }
                 else {
                     Err(::mg_settings::error::SettingError::WrongType {
@@ -132,20 +193,9 @@ fn to_settings_impl(name: &Ident, variant_name: &Ident, settings_struct: &Body) 
             }
         };
 
-        let get_fn = quote! {
-            fn get(&self, name: &str) -> Option<::mg_settings::Value> {
-                match name {
-                    #(#string_names => Some(::mg_settings::Value::#types1(self.#names2.clone())),)*
-                    _ => None,
-                }
-            }
-        };
-
         quote! {
             impl ::mg_settings::settings::Settings for #name {
                 type Variant = #variant_name;
-
-                #get_fn
 
                 #to_variant_fn
 
@@ -171,8 +221,7 @@ fn to_value_type(ident: &Ident) -> Ident {
             "bool" => "Bool",
             "f64" => "Float",
             "i64" => "Int",
-            "String" => "Str",
-            ty => panic!("Unexpected type {}", ty),
+            _ => "Str",
         };
     Ident::new(value_type)
 }
