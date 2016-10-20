@@ -76,7 +76,7 @@ pub fn expand_setting_enum(mut ast: MacroInput) -> Tokens {
             quote! {
                 impl Default for #name {
                     fn default() -> Self {
-                        #ident
+                        #name::#ident
                     }
                 }
             }
