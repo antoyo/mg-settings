@@ -92,6 +92,8 @@ pub trait EnumMetaData {
 /// The `Command` enum represents a command from a config file.
 #[derive(Debug, PartialEq)]
 pub enum Command<T> {
+    /// A command from the application library.
+    App(String),
     /// A custom command.
     Custom(T),
     /// A map command creates a new key mapping.
@@ -117,6 +119,8 @@ pub enum Command<T> {
 /// The parsing configuration.
 #[derive(Default)]
 pub struct Config {
+    /// The application library commands.
+    pub application_commands: Vec<String>,
     /// The available mapping modes for the map command.
     pub mapping_modes: Vec<String>,
 }
@@ -184,6 +188,9 @@ impl<T: EnumFromStr> Parser<T> {
             };
         if let Ok(command) = T::create(word, args) {
             Ok(Custom(command))
+        }
+        else if self.config.application_commands.contains(&word.to_string()) {
+            Ok(App(word.to_string()))
         }
         else {
             Err(Box::new(Error::new(

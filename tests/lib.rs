@@ -26,7 +26,7 @@ extern crate mg_settings;
 extern crate mg_settings_macros;
 
 use mg_settings::{Config, EnumFromStr, Parser};
-use mg_settings::Command::{self, Custom, Map, Set, Unmap};
+use mg_settings::Command::{self, App, Custom, Map, Set, Unmap};
 use mg_settings::key::Key::{Backspace, Char, Control, Down, Enter, Escape, F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, Left, Right, Space, Tab, Up};
 use mg_settings::Value::{Bool, Float, Int, Str};
 
@@ -40,6 +40,11 @@ enum CustomCommand {
 }
 
 type CommandParser = Parser<CustomCommand>;
+
+#[test]
+fn app_command() {
+    assert_eq!(parse_string_with_config("complete-next"), vec![App("complete-next".to_string())]);
+}
 
 #[test]
 fn commands_macro() {
@@ -151,14 +156,14 @@ fn map_command() {
 #[test]
 fn set_command() {
     assert_eq!(parse_string("set option1 = 42"), vec![Set("option1".to_string(), Int(42))]);
-    assert_eq!(parse_string("set option1 = 3.141592"), vec![Set("option1".to_string(), Float(3.141592))]);
+    assert_eq!(parse_string("set option1 = 12.345"), vec![Set("option1".to_string(), Float(12.345))]);
     assert_eq!(parse_string("set option1 = false"), vec![Set("option1".to_string(), Bool(false))]);
     assert_eq!(parse_string("set option1 = true"), vec![Set("option1".to_string(), Bool(true))]);
     assert_eq!(parse_string("set option1 = value"), vec![Set("option1".to_string(), Str("value".to_string()))]);
     assert_eq!(parse_string("set option1 = value with spaces"), vec![Set("option1".to_string(), Str("value with spaces".to_string()))]);
-    assert_eq!(parse_string("set option1 = 42\nset option2 = 3.141592"), vec![Set("option1".to_string(), Int(42)), Set("option2".to_string(), Float(3.141592))]);
-    assert_eq!(parse_string("set option1 = 42\nset option2 = 3.141592\n"), vec![Set("option1".to_string(), Int(42)), Set("option2".to_string(), Float(3.141592))]);
-    assert_eq!(parse_string("set option1 = 42\n\nset option2 = 3.141592\n"), vec![Set("option1".to_string(), Int(42)), Set("option2".to_string(), Float(3.141592))]);
+    assert_eq!(parse_string("set option1 = 42\nset option2 = 12.345"), vec![Set("option1".to_string(), Int(42)), Set("option2".to_string(), Float(12.345))]);
+    assert_eq!(parse_string("set option1 = 42\nset option2 = 12.345\n"), vec![Set("option1".to_string(), Int(42)), Set("option2".to_string(), Float(12.345))]);
+    assert_eq!(parse_string("set option1 = 42\n\nset option2 = 12.345\n"), vec![Set("option1".to_string(), Int(42)), Set("option2".to_string(), Float(12.345))]);
     assert_eq!(parse_string("  set    option1    =    42    "), vec![Set("option1".to_string(), Int(42))]);
 }
 
@@ -175,6 +180,7 @@ fn parse_error(input: &str) -> String {
 
 fn parse_error_with_config(input: &str) -> String {
     let mut parser = CommandParser::new_with_config(Config {
+        application_commands: vec![],
         mapping_modes: vec!["n".to_string(), "i".to_string(), "c".to_string()],
     });
     parser.parse(input.as_bytes(), ).unwrap_err().to_string()
@@ -193,8 +199,8 @@ fn parse_string_no_include_path(input: &str) -> Vec<Command<CustomCommand>> {
 
 fn parse_string_with_config(input: &str) -> Vec<Command<CustomCommand>> {
     let mut parser = CommandParser::new_with_config(Config {
+        application_commands: vec!["complete-next".to_string()],
         mapping_modes: vec!["n".to_string(), "i".to_string(), "c".to_string()],
     });
-    println!("{:?}", parser.parse(input.as_bytes()));
     parser.parse(input.as_bytes()).unwrap()
 }
