@@ -90,27 +90,28 @@ fn newlines() {
 
 #[test]
 fn parser_errors() {
-    assert_eq!(parse_error("set 5 5"), "unexpected 5, expecting identifier on line 1, column 5".to_string());
-    assert_eq!(parse_error(" set 5 5"), "unexpected 5, expecting identifier on line 1, column 6".to_string());
-    assert_eq!(parse_error("set  5 5"), "unexpected 5, expecting identifier on line 1, column 6".to_string());
-    assert_eq!(parse_error("5"), "unexpected 5, expecting command or comment on line 1, column 1".to_string());
-    assert_eq!(parse_error(" ste option1 = 42"), "unexpected ste, expecting command or comment on line 1, column 2".to_string());
-    assert_eq!(parse_error("set option1 < 42"), "unexpected <, expecting = on line 1, column 13".to_string());
-    assert_eq!(parse_error(" set option1 < 42"), "unexpected <, expecting = on line 1, column 14".to_string());
-    assert_eq!(parse_error("set option1 ="), "unexpected <end of line>, expecting value on line 1, column 14".to_string());
-    assert_eq!(parse_error("set"), "unexpected <end of line>, expecting command arguments on line 1, column 4".to_string());
-    assert_eq!(parse_error("set option1"), "unexpected <end of line>, expecting = on line 1, column 12".to_string());
-    assert_eq!(parse_error("include"), "unexpected <end of line>, expecting command arguments on line 1, column 8".to_string());
-    assert_eq!(parse_error_with_config("nmap a"), "unexpected <end of line>, expecting mapping action on line 1, column 7".to_string());
-    assert_eq!(parse_error_with_config("nmap"), "unexpected <end of line>, expecting command arguments on line 1, column 5".to_string());
-    assert_eq!(parse_error_with_config("nmap <C-@> :open"), "unexpected @, expecting A-Z on line 1, column 9".to_string());
-    assert_eq!(parse_error_with_config("nmap <C-o@> :open"), "unexpected C-o@, expecting special key on line 1, column 7".to_string());
-    assert_eq!(parse_error_with_config("nmap <C-TE> :open"), "unexpected C-TE, expecting special key on line 1, column 7".to_string());
-    assert_eq!(parse_error_with_config("nmap <Test> :open"), "unexpected Test, expecting special key on line 1, column 7".to_string());
-    assert_eq!(parse_error_with_config("mmap o :open"), "unexpected mmap, expecting command or comment on line 1, column 1".to_string());
-    assert_eq!(parse_error_with_config("nunmap <F1> :help"), "unexpected :help, expecting <end of line> on line 1, column 13".to_string());
-    assert_eq!(parse_error_with_config("include config my-other-config"), "unexpected my-other-config, expecting <end of line> on line 1, column 16".to_string());
-    assert_eq!(parse_error("open"), "unexpected <end of line>, expecting command arguments on line 1, column 5".to_string());
+    assert_eq!(parse_error("set 5 5"), "unexpected 5, expecting identifier on line 1, column 5");
+    assert_eq!(parse_error(" set 5 5"), "unexpected 5, expecting identifier on line 1, column 6");
+    assert_eq!(parse_error("set  5 5"), "unexpected 5, expecting identifier on line 1, column 6");
+    assert_eq!(parse_error("5"), "unexpected 5, expecting command or comment on line 1, column 1");
+    assert_eq!(parse_error(" ste option1 = 42"), "unexpected ste, expecting command or comment on line 1, column 2");
+    assert_eq!(parse_error("set option1 < 42"), "unexpected <, expecting = on line 1, column 13");
+    assert_eq!(parse_error(" set option1 < 42"), "unexpected <, expecting = on line 1, column 14");
+    assert_eq!(parse_error("set option1 ="), "unexpected <end of line>, expecting value on line 1, column 14");
+    assert_eq!(parse_error("set"), "unexpected <end of line>, expecting command arguments on line 1, column 4");
+    assert_eq!(parse_error("set option1"), "unexpected <end of line>, expecting = on line 1, column 12");
+    assert_eq!(parse_error("include"), "unexpected <end of line>, expecting command arguments on line 1, column 8");
+    assert_eq!(parse_error_with_config("nmap a"), "unexpected <end of line>, expecting mapping action on line 1, column 7");
+    assert_eq!(parse_error_with_config("nmap"), "unexpected <end of line>, expecting command arguments on line 1, column 5");
+    assert_eq!(parse_error_with_config("nmap <C-@> :open"), "unexpected @, expecting A-Z or special key on line 1, column 9");
+    assert_eq!(parse_error_with_config("nmap <C-o@> :open"), "unexpected o@, expecting one character on line 1, column 9");
+    assert_eq!(parse_error_with_config("nmap <C-TE> :open"), "unexpected TE, expecting one character on line 1, column 9");
+    assert_eq!(parse_error_with_config("nmap <Test> :open"), "unexpected Test, expecting special key on line 1, column 7");
+    assert_eq!(parse_error_with_config("mmap o :open"), "unexpected mmap, expecting command or comment on line 1, column 1");
+    assert_eq!(parse_error_with_config("nunmap <F1> :help"), "unexpected :help, expecting <end of line> on line 1, column 13");
+    assert_eq!(parse_error_with_config("include config my-other-config"), "unexpected my-other-config, expecting <end of line> on line 1, column 16");
+    assert_eq!(parse_error("open"), "unexpected <end of line>, expecting command arguments on line 1, column 5");
+    assert_eq!(parse_error_with_config("nmap <F1 :help"), "unexpected (none), expecting > on line 1, column 9");
 }
 
 #[test]
@@ -152,6 +153,8 @@ fn map_command() {
     assert_eq!(parse_string_with_config("nmap <S-A> :help"), vec![Map { action: ":help".to_string(), keys: vec![Shift(Box::new(Char('A')))], mode: "n".to_string() }]);
     assert_eq!(parse_string_with_config("nmap Oo :open"), vec![Map { action: ":open".to_string(), keys: vec![Char('O'), Char('o')], mode: "n".to_string() }]);
     assert_eq!(parse_string_with_config("nmap <C-O>o :open"), vec![Map { action: ":open".to_string(), keys: vec![Control(Box::new(Char('O'))), Char('o')], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <C-Tab> :help"), vec![Map { action: ":help".to_string(), keys: vec![Control(Box::new(Tab))], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <S-Tab> :help"), vec![Map { action: ":help".to_string(), keys: vec![Shift(Box::new(Tab))], mode: "n".to_string() }]);
 }
 
 #[test]

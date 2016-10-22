@@ -86,55 +86,50 @@ fn parse_key(input: &str, line_num: usize, column_num: usize) -> Result<(Key, us
         match chars.next() {
             Some('<') => {
                 let key: String = chars.take_while(|&character| character != '>').collect();
+                if !input.contains('>') {
+                    return Err(Box::new(Error::new(
+                        Parse,
+                        "(none)".to_string(),
+                        ">".to_string(),
+                        Pos::new(line_num, column_num + input.len())
+                    )));
+
+                }
                 let (start, end) = key.split_at(2);
-                if (start == "C-" || start == "S-") && end.len() == 1 {
-                    let character = end.chars().next().unwrap(); // NOTE: There is one character, hence unwrap.
+                if start == "C-" || start == "S-" {
                     let constructor =
                         match start {
                             "C-" => Control,
                             "S-" => Shift,
                             _ => unreachable!(),
                         };
-                    match character {
-                        'A' ... 'Z' | 'a' ... 'z' => (constructor(Box::new(Char(character))), 5),
-                        _ => return Err(Box::new(Error::new(
-                                 Parse,
-                                 character.to_string(),
-                                 "A-Z".to_string(),
-                                 Pos::new(line_num, column_num + 3)
-                             ))),
+                    let character = end.chars().next().unwrap(); // NOTE: There is at least one character, hence unwrap.
+                    let result_special_key = special_key(end, line_num, column_num + 2, true)
+                        .map(|(key, size)| (constructor(Box::new(key)), size + 2));
+                    match result_special_key {
+                        Ok(result) => result,
+                        Err(error) => {
+                            match character {
+                                'A' ... 'Z' | 'a' ... 'z' => {
+                                    if end.len() == 1 {
+                                        (constructor(Box::new(Char(character))), 5)
+                                    }
+                                    else {
+                                        return Err(Box::new(Error::new(
+                                            Parse,
+                                            end.to_string(),
+                                            "one character".to_string(),
+                                            Pos::new(line_num, column_num + 3)
+                                        )));
+                                    }
+                                },
+                                _ => return Err(error),
+                            }
+                        },
                     }
                 }
                 else {
-                    match key.as_str() {
-                        "Backspace" => (Backspace, 11),
-                        "Down" => (Down, 6),
-                        "Enter" => (Enter, 7),
-                        "Esc" => (Escape, 5),
-                        "F1" => (F1, 4),
-                        "F2" => (F2, 4),
-                        "F3" => (F3, 4),
-                        "F4" => (F4, 4),
-                        "F5" => (F5, 4),
-                        "F6" => (F6, 4),
-                        "F7" => (F7, 4),
-                        "F8" => (F8, 4),
-                        "F9" => (F9, 4),
-                        "F10" => (F10, 5),
-                        "F11" => (F11, 5),
-                        "F12" => (F12, 5),
-                        "Left" => (Left, 6),
-                        "Right" => (Right, 7),
-                        "Space" => (Space, 7),
-                        "Tab" => (Tab, 5),
-                        "Up" => (Up, 4),
-                        _ => return Err(Box::new(Error::new(
-                                 Parse,
-                                 key.clone(),
-                                 "special key".to_string(),
-                                 Pos::new(line_num, column_num + 1)
-                             ))),
-                    }
+                    return special_key(&key, line_num, column_num, false);
                 }
             },
             Some(character) => {
@@ -167,4 +162,46 @@ pub fn parse_keys(mut input: &str, line_num: usize, column_num: usize) -> Result
         index += size;
     }
     Ok(keys)
+}
+
+/// Parse a special key.
+fn special_key(key: &str, line_num: usize, column_num: usize, in_special_key: bool) -> Result<(Key, usize)> {
+    let expected =
+        if in_special_key {
+            "A-Z or special key"
+        }
+        else {
+            "special key"
+        };
+    let result =
+        match key {
+            "Backspace" => (Backspace, 11),
+            "Down" => (Down, 6),
+            "Enter" => (Enter, 7),
+            "Esc" => (Escape, 5),
+            "F1" => (F1, 4),
+            "F2" => (F2, 4),
+            "F3" => (F3, 4),
+            "F4" => (F4, 4),
+            "F5" => (F5, 4),
+            "F6" => (F6, 4),
+            "F7" => (F7, 4),
+            "F8" => (F8, 4),
+            "F9" => (F9, 4),
+            "F10" => (F10, 5),
+            "F11" => (F11, 5),
+            "F12" => (F12, 5),
+            "Left" => (Left, 6),
+            "Right" => (Right, 7),
+            "Space" => (Space, 7),
+            "Tab" => (Tab, 5),
+            "Up" => (Up, 4),
+            _ => return Err(Box::new(Error::new(
+                     Parse,
+                     key.to_string(),
+                     expected.to_string(),
+                     Pos::new(line_num, column_num + 1)
+                 ))),
+        };
+    Ok(result)
 }
