@@ -70,6 +70,8 @@ pub enum Key {
     Left,
     /// Right arrow.
     Right,
+    /// Shift + another key.
+    Shift(Box<Key>),
     /// Space key.
     Space,
     /// Tab key.
@@ -85,10 +87,16 @@ fn parse_key(input: &str, line_num: usize, column_num: usize) -> Result<(Key, us
             Some('<') => {
                 let key: String = chars.take_while(|&character| character != '>').collect();
                 let (start, end) = key.split_at(2);
-                if start == "C-" && end.len() == 1 {
+                if (start == "C-" || start == "S-") && end.len() == 1 {
                     let character = end.chars().next().unwrap(); // NOTE: There is one character, hence unwrap.
+                    let constructor =
+                        match start {
+                            "C-" => Control,
+                            "S-" => Shift,
+                            _ => unreachable!(),
+                        };
                     match character {
-                        'A' ... 'Z' | 'a' ... 'z' => (Control(Box::new(Char(character))), 5),
+                        'A' ... 'Z' | 'a' ... 'z' => (constructor(Box::new(Char(character))), 5),
                         _ => return Err(Box::new(Error::new(
                                  Parse,
                                  character.to_string(),

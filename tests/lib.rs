@@ -27,7 +27,7 @@ extern crate mg_settings_macros;
 
 use mg_settings::{Config, EnumFromStr, Parser};
 use mg_settings::Command::{self, App, Custom, Map, Set, Unmap};
-use mg_settings::key::Key::{Backspace, Char, Control, Down, Enter, Escape, F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, Left, Right, Space, Tab, Up};
+use mg_settings::key::Key::{Backspace, Char, Control, Down, Enter, Escape, F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, Left, Right, Shift, Space, Tab, Up};
 use mg_settings::Value::{Bool, Float, Int, Str};
 
 use CustomCommand::*;
@@ -149,6 +149,7 @@ fn map_command() {
     assert_eq!(parse_string_with_config("nmap <C-A> :help"), vec![Map { action: ":help".to_string(), keys: vec![Control(Box::new(Char('A')))], mode: "n".to_string() }]);
     assert_eq!(parse_string_with_config("nmap <C-Z> :help"), vec![Map { action: ":help".to_string(), keys: vec![Control(Box::new(Char('Z')))], mode: "n".to_string() }]);
     assert_eq!(parse_string_with_config("nmap <C-o> :help"), vec![Map { action: ":help".to_string(), keys: vec![Control(Box::new(Char('o')))], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <S-A> :help"), vec![Map { action: ":help".to_string(), keys: vec![Shift(Box::new(Char('A')))], mode: "n".to_string() }]);
     assert_eq!(parse_string_with_config("nmap Oo :open"), vec![Map { action: ":open".to_string(), keys: vec![Char('O'), Char('o')], mode: "n".to_string() }]);
     assert_eq!(parse_string_with_config("nmap <C-O>o :open"), vec![Map { action: ":open".to_string(), keys: vec![Control(Box::new(Char('O'))), Char('o')], mode: "n".to_string() }]);
 }
