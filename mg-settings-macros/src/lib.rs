@@ -26,6 +26,7 @@ extern crate proc_macro;
 extern crate quote;
 extern crate syn;
 
+mod attributes;
 mod commands;
 mod settings;
 mod string;

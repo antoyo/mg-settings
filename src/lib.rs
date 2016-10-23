@@ -26,6 +26,8 @@
 //! Call the `parse` function on the input.
 
 /*
+ * TODO: support set = without spaces around =.
+ * TODO: auto-include files.
  * TODO: add the attribute #[special_command] in the Command derive macro.
  * TODO: create a new method instead of using words and find/unwrap.
  * TODO: Add array type.
@@ -57,14 +59,16 @@ use string::{StrExt, check_ident, maybe_word, word, words};
 use Command::*;
 use Value::*;
 
-/// Command meta-data coming from the attributes.
+/// Command/setting meta-data coming from the attributes.
 /// See `EnumMetaData` to see the list of supported attributes.
-pub struct CommandMetaData {
-    /// Whether this command should be shown in the completion or not.
+#[derive(Debug)]
+pub struct MetaData {
+    /// Whether this command/setting should be shown in the completion or not.
     pub completion_hidden: bool,
-    /// The help text associated with this command.
+    /// The help text associated with this command/setting.
     pub help_text: String,
     /// Whether this is a special command or not.
+    /// This is not applicable to settings.
     pub is_special_command: bool,
 }
 
@@ -86,7 +90,7 @@ pub trait EnumFromStr
 /// #[help(Command help)]
 pub trait EnumMetaData {
     /// Get the metadata associated with the enum.
-    fn get_metadata() -> HashMap<String, CommandMetaData>;
+    fn get_metadata() -> HashMap<String, MetaData>;
 }
 
 /// The `Command` enum represents a command from a config file.

@@ -25,6 +25,7 @@ use syn::Body::{Enum, Struct};
 use syn::MetaItem::Word;
 use syn::Ty;
 
+use attributes::to_metadata_impl;
 use string::{snake_to_camel, to_dash_name};
 
 /// Expand the required trais for the derive Setting attribute.
@@ -101,11 +102,12 @@ pub fn expand_setting_enum(mut ast: MacroInput) -> Tokens {
 }
 
 /// Expand the required traits for the derive Settings attribute.
-pub fn expand_settings_enum(ast: MacroInput) -> Tokens {
-    let name = ast.ident.clone();
+pub fn expand_settings_enum(mut ast: MacroInput) -> Tokens {
+    let name = &ast.ident;
     let variant_name = Ident::new(format!("{}Variant", name));
     let variant_enum = to_enums(&ast.ident, &variant_name, &ast.body);
-    let settings_impl = to_settings_impl(&name, &variant_name, &ast.body);
+    let settings_impl = to_settings_impl(name, &variant_name, &ast.body);
+    let (metadata_impl, _) = to_metadata_impl(name, &mut ast.body);
     quote! {
         #[derive(Default)]
         #ast
@@ -113,6 +115,8 @@ pub fn expand_settings_enum(ast: MacroInput) -> Tokens {
         #variant_enum
 
         #settings_impl
+
+        #metadata_impl
     }
 }
 
