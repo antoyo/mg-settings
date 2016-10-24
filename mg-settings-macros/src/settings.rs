@@ -204,6 +204,8 @@ fn to_settings_impl(name: &Ident, variant_name: &Ident, settings_struct: &Body) 
         let string_names = &string_names;
         let capitalized_names = &capitalized_names;
         let names1 = &names;
+        let names2 = &names;
+        let names3 = &names;
         let variant_exprs = names.iter().zip(original_types.iter())
             .map(|(name, typ)|
                  if is_custom_type(typ) {
@@ -215,8 +217,6 @@ fn to_settings_impl(name: &Ident, variant_name: &Ident, settings_struct: &Body) 
                      quote! { #name }
                  }
             );
-        let names2 = &names;
-        let names3 = &names;
         let types1 = &types;
         let type_names = types.iter()
             .map(|ident| value_type_to_type(&ident));
@@ -283,11 +283,11 @@ pub fn to_setting_completion_fn(name: &Ident, body: &Body) -> Tokens {
                 }
             }
 
-            let field_name = field.ident.as_ref().unwrap().to_string();
+            let setting_name = field.ident.as_ref().unwrap().to_string().replace('_', "-");
             let field_type = &field.ty;
 
             completions.push(quote! {
-                (#field_name.to_string(), #field_type::completion_values())
+                (#setting_name.to_string(), #field_type::completion_values())
             });
         }
     }
