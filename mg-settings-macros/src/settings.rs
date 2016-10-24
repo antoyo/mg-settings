@@ -22,7 +22,7 @@
 use quote::Tokens;
 use syn::{Attribute, Body, Ident, MacroInput, Path, VariantData};
 use syn::Body::{Enum, Struct};
-use syn::MetaItem::Word;
+use syn::MetaItem::{List, Word};
 use syn::Ty;
 
 use attributes::to_metadata_impl;
@@ -87,11 +87,21 @@ pub fn expand_setting_enum(mut ast: MacroInput) -> Tokens {
             }
         };
 
+    let completion_values_impl = quote! {
+        impl CompletionValues for #name {
+            fn completion_values() -> Vec<String> {
+                vec![#(#choice_names1.to_string()),*]
+            }
+        }
+    };
+
     quote! {
         #[derive(Clone)]
         #ast
 
         #default_impl
+
+        #completion_values_impl
 
         impl ::std::str::FromStr for #name {
             type Err = ::mg_settings::error::SettingError;
@@ -104,6 +114,7 @@ pub fn expand_setting_enum(mut ast: MacroInput) -> Tokens {
 /// Expand the required traits for the derive Settings attribute.
 pub fn expand_settings_enum(mut ast: MacroInput) -> Tokens {
     let name = &ast.ident;
+    let completion_fn = to_setting_completion_fn(name, &ast.body);
     let variant_name = Ident::new(format!("{}Variant", name));
     let variant_enum = to_enums(&ast.ident, &variant_name, &ast.body);
     let settings_impl = to_settings_impl(name, &variant_name, &ast.body);
@@ -117,6 +128,8 @@ pub fn expand_settings_enum(mut ast: MacroInput) -> Tokens {
         #settings_impl
 
         #metadata_impl
+
+        #completion_fn
     }
 }
 
@@ -249,6 +262,46 @@ fn to_settings_impl(name: &Ident, variant_name: &Ident, settings_struct: &Body) 
     }
     else {
         panic!("Not a struct");
+    }
+}
+
+/// Create the function returing the completion of the setting values.
+pub fn to_setting_completion_fn(name: &Ident, body: &Body) -> Tokens {
+    let mut completions = vec![];
+    if let Struct(VariantData::Struct(ref fields)) = *body {
+        'field_loop:
+        for field in fields {
+            for attribute in &field.attrs {
+                if let &Attribute { value: List(ref ident, ref args), .. } = attribute {
+                    if ident == "completion" {
+                        if let Word(ref arg_ident) = args[0] {
+                            if arg_ident == "hidden" {
+                                continue 'field_loop;
+                            }
+                        }
+                    }
+                }
+            }
+
+            let field_name = field.ident.as_ref().unwrap().to_string();
+            let field_type = &field.ty;
+
+            completions.push(quote! {
+                (#field_name.to_string(), #field_type::completion_values())
+            });
+        }
+    }
+
+    quote! {
+        use mg_settings::CompletionValues;
+
+        impl ::mg_settings::SettingCompletion for #name {
+            fn get_value_completions() -> ::std::collections::HashMap<String, Vec<String>> {
+                let mut vec = vec![#(#completions),*];
+                let iter = vec.drain(..);
+                iter.collect()
+            }
+        }
     }
 }
 

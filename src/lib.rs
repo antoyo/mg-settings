@@ -59,17 +59,28 @@ use string::{StrExt, check_ident, maybe_word, word, words};
 use Command::*;
 use Value::*;
 
-/// Command/setting meta-data coming from the attributes.
-/// See `EnumMetaData` to see the list of supported attributes.
-#[derive(Debug)]
-pub struct MetaData {
-    /// Whether this command/setting should be shown in the completion or not.
-    pub completion_hidden: bool,
-    /// The help text associated with this command/setting.
-    pub help_text: String,
-    /// Whether this is a special command or not.
-    /// This is not applicable to settings.
-    pub is_special_command: bool,
+/// Trait to specify the completion values for a type.
+pub trait CompletionValues {
+    /// Get the completion values for the type.
+    fn completion_values() -> Vec<String>;
+}
+
+impl CompletionValues for bool {
+    fn completion_values() -> Vec<String> {
+        vec!["true".to_string(), "false".to_string()]
+    }
+}
+
+impl CompletionValues for i64 {
+    fn completion_values() -> Vec<String> {
+        vec![]
+    }
+}
+
+impl CompletionValues for String {
+    fn completion_values() -> Vec<String> {
+        vec![]
+    }
 }
 
 /// The `EnumFromStr` trait is used to specify how to construct an enum value from a string.
@@ -91,6 +102,25 @@ pub trait EnumFromStr
 pub trait EnumMetaData {
     /// Get the metadata associated with the enum.
     fn get_metadata() -> HashMap<String, MetaData>;
+}
+
+/// Command/setting meta-data coming from the attributes.
+/// See `EnumMetaData` to see the list of supported attributes.
+#[derive(Debug)]
+pub struct MetaData {
+    /// Whether this command/setting should be shown in the completion or not.
+    pub completion_hidden: bool,
+    /// The help text associated with this command/setting.
+    pub help_text: String,
+    /// Whether this is a special command or not.
+    /// This is not applicable to settings.
+    pub is_special_command: bool,
+}
+
+/// Trait specifying the value completions for settings.
+pub trait SettingCompletion {
+    /// Get the value completions of all the setting.
+    fn get_value_completions() -> HashMap<String, Vec<String>>;
 }
 
 /// The `Command` enum represents a command from a config file.
