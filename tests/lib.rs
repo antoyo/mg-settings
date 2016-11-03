@@ -112,6 +112,7 @@ fn parser_errors() {
     assert_eq!(parse_error_with_config("include config my-other-config"), "unexpected my-other-config, expecting <end of line> on line 1, column 16");
     assert_eq!(parse_error("open"), "unexpected <end of line>, expecting command arguments on line 1, column 5");
     assert_eq!(parse_error_with_config("nmap <F1 :help"), "unexpected (none), expecting > on line 1, column 9");
+    assert_eq!(parse_error_with_config("nmap <F> :help"), "unexpected F, expecting special key on line 1, column 7");
 }
 
 #[test]
@@ -155,6 +156,8 @@ fn map_command() {
     assert_eq!(parse_string_with_config("nmap <C-O>o :open"), vec![Map { action: ":open".to_string(), keys: vec![Control(Box::new(Char('O'))), Char('o')], mode: "n".to_string() }]);
     assert_eq!(parse_string_with_config("nmap <C-Tab> :help"), vec![Map { action: ":help".to_string(), keys: vec![Control(Box::new(Tab))], mode: "n".to_string() }]);
     assert_eq!(parse_string_with_config("nmap <S-Tab> :help"), vec![Map { action: ":help".to_string(), keys: vec![Shift(Box::new(Tab))], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <C-S-Tab> :help"), vec![Map { action: ":help".to_string(), keys: vec![Control(Box::new(Shift(Box::new(Tab))))], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <S-C-Tab> :help"), vec![Map { action: ":help".to_string(), keys: vec![Control(Box::new(Shift(Box::new(Tab))))], mode: "n".to_string() }]);
 }
 
 #[test]
