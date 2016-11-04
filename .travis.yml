@@ -32,4 +32,6 @@ env:
 
 matrix:
   allow_failures:
-    - rust: stable, beta
+    - rust:
+      - stable
+      - beta
