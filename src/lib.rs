@@ -26,10 +26,10 @@
 //! Call the `parse` function on the input.
 
 /*
- * TODO: support set = without spaces around =.
- * TODO: auto-include files.
- * TODO: add the attribute #[special_command] in the Command derive macro.
  * TODO: create a new method instead of using words and find/unwrap.
+ * TODO: add the attribute #[special_command] in the Command derive macro.
+ * TODO: auto-include files.
+ * TODO: support set = without spaces around =.
  * TODO: Add array type.
  */
 
