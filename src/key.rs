@@ -21,6 +21,8 @@
 
 //! Type for representing keys and functions for parsing strings into `Key`s.
 
+use std::fmt::{self, Display, Formatter};
+
 use error::{Error, Result};
 use error::ErrorType::Parse;
 use position::Pos;
@@ -93,6 +95,53 @@ pub enum Key {
     Tab,
     /// Up arrow.
     Up,
+}
+
+/// Convert a `Key` a to `String`.
+/// Note that the result does not contain < and >.
+fn key_to_string(key: &Key) -> String {
+    let string =
+        match *key {
+            Backspace => "Backspace",
+            Char(character) => return character.to_string(),
+            Control(ref key) => return format!("C-{}", key_to_string(&*key)),
+            Down => "Down",
+            Enter => "Enter",
+            Escape => "Esc",
+            F1 => "F1",
+            F2 => "F2",
+            F3 => "F3",
+            F4 => "F4",
+            F5 => "F5",
+            F6 => "F6",
+            F7 => "F7",
+            F8 => "F8",
+            F9 => "F9",
+            F10 => "F10",
+            F11 => "F11",
+            F12 => "F12",
+            Left => "Left",
+            Right => "Right",
+            Shift(ref key) => return format!("S-{}", key_to_string(&*key)),
+            Space => "Space",
+            Tab => "Tab",
+            Up => "Up",
+        };
+    string.to_string()
+}
+
+impl Display for Key {
+    fn fmt(&self, formatter: &mut Formatter) -> fmt::Result {
+        let string = key_to_string(self);
+        let string =
+            if let Char(_) = *self {
+                string
+            }
+            else {
+                format!("<{}>", string)
+            };
+        write!(formatter, "{}", string)
+    }
 }
 
 fn parse_key(input: &str, line_num: usize, column_num: usize) -> Result<(Key, usize)> {
