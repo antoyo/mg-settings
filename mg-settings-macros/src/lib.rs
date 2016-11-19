@@ -36,7 +36,7 @@ use proc_macro::TokenStream;
 use commands::expand_commands_enum;
 use settings::{expand_setting_enum, expand_settings_enum};
 
-#[proc_macro_derive(Commands)]
+#[proc_macro_derive(Commands, attributes(completion, help))]
 /// Derive Commands.
 pub fn commands(input: TokenStream) -> TokenStream {
     let source = input.to_string();
@@ -45,7 +45,7 @@ pub fn commands(input: TokenStream) -> TokenStream {
     expanded.to_string().parse().unwrap()
 }
 
-#[proc_macro_derive(Setting)]
+#[proc_macro_derive(Setting, attributes(default))]
 /// Derive Setting.
 pub fn setting(input: TokenStream) -> TokenStream {
     let source = input.to_string();
@@ -54,7 +54,7 @@ pub fn setting(input: TokenStream) -> TokenStream {
     expanded.to_string().parse().unwrap()
 }
 
-#[proc_macro_derive(Settings)]
+#[proc_macro_derive(Settings, attributes(help))]
 /// Derive Settings.
 pub fn settings(input: TokenStream) -> TokenStream {
     let source = input.to_string();

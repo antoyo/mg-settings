@@ -25,9 +25,7 @@ use error::SettingError;
 use super::Value;
 
 /// Settings manager.
-pub trait Settings
-    where Self::Variant: Clone,
-{
+pub trait Settings {
     /// The variant enum representing the setting setters.
     type Variant;
 

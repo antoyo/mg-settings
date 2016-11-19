@@ -51,8 +51,6 @@ pub fn expand_commands_enum(mut ast: MacroInput) -> Tokens {
     let variant_names = &variant_names;
     let variant_has_argument = &variant_info.has_argument;
     quote! {
-        #ast
-
         impl ::mg_settings::EnumFromStr for #name {
             fn create(variant: &str, argument: &str) -> ::std::result::Result<#name, String> {
                 match variant {

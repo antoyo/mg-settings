@@ -67,7 +67,6 @@ macro_rules! collect_and_transform {
                     }
                 }
             }
-            $item.attrs.clear();
         }
         $descriptions.push(help);
         $hidden_items.push(hidden);
@@ -84,7 +83,7 @@ pub struct VariantInfo {
 }
 
 /// Create the EnumMetaData impl.
-pub fn to_metadata_impl(name: &Ident, body: &mut Body) -> (Tokens, VariantInfo) {
+pub fn to_metadata_impl(name: &Ident, body: &Body) -> (Tokens, VariantInfo) {
     let variant_info = transform_enum(body);
     let variant_names: Vec<_> = variant_info.names.iter()
         .map(|name| to_dash_name(&name))
@@ -118,18 +117,18 @@ pub fn to_metadata_impl(name: &Ident, body: &mut Body) -> (Tokens, VariantInfo) 
 }
 
 /// Remove the attributes from the variants and return the metadata gathered from the attributes.
-pub fn transform_enum(item: &mut Body) -> VariantInfo {
+pub fn transform_enum(item: &Body) -> VariantInfo {
     let mut descriptions = vec![];
     let mut has_argument = vec![];
     let mut hidden_items = vec![];
     let mut item_names = vec![];
     match *item {
-        Enum(ref mut variants) => {
+        Enum(ref variants) => {
             for variant in variants {
                 collect_and_transform!(variant, true, has_argument, item_names, descriptions, hidden_items);
             }
         },
-        Struct(VariantData::Struct(ref mut fields)) => {
+        Struct(VariantData::Struct(ref fields)) => {
             for field in fields {
                 collect_and_transform!(field, false, has_argument, item_names, descriptions, hidden_items);
             }

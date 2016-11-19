@@ -29,12 +29,12 @@ use attributes::to_metadata_impl;
 use string::{snake_to_camel, to_dash_name};
 
 /// Expand the required trais for the derive Setting attribute.
-pub fn expand_setting_enum(mut ast: MacroInput) -> Tokens {
+pub fn expand_setting_enum(ast: MacroInput) -> Tokens {
     let name = ast.ident.clone();
     let mut default = None;
 
     let mut variant_names = vec![];
-    if let Enum(ref mut variants) = ast.body {
+    if let Enum(ref variants) = ast.body {
         for variant in variants {
             variant_names.push(variant.ident.clone());
             if !variant.attrs.is_empty() {
@@ -45,7 +45,6 @@ pub fn expand_setting_enum(mut ast: MacroInput) -> Tokens {
                         }
                     }
                 }
-                variant.attrs.clear();
             }
         }
     }
@@ -96,9 +95,6 @@ pub fn expand_setting_enum(mut ast: MacroInput) -> Tokens {
     };
 
     quote! {
-        #[derive(Clone)]
-        #ast
-
         #default_impl
 
         #completion_values_impl
@@ -112,17 +108,14 @@ pub fn expand_setting_enum(mut ast: MacroInput) -> Tokens {
 }
 
 /// Expand the required traits for the derive Settings attribute.
-pub fn expand_settings_enum(mut ast: MacroInput) -> Tokens {
+pub fn expand_settings_enum(ast: MacroInput) -> Tokens {
     let name = &ast.ident;
     let completion_fn = to_setting_completion_fn(name, &ast.body);
     let variant_name = Ident::new(format!("{}Variant", name));
-    let variant_enum = to_enums(&ast.ident, &variant_name, &ast.body);
+    let variant_enum = to_enums(&variant_name, &ast.body);
     let settings_impl = to_settings_impl(name, &variant_name, &ast.body);
-    let (metadata_impl, _) = to_metadata_impl(name, &mut ast.body);
+    let (metadata_impl, _) = to_metadata_impl(name, &ast.body);
     quote! {
-        #[derive(Default)]
-        #ast
-
         #variant_enum
 
         #settings_impl
@@ -142,7 +135,7 @@ fn is_custom_type(ident: &Ident) -> bool {
 }
 
 /// Create the variant enums for getters and setters.
-fn to_enums(name: &Ident, variant_name: &Ident, settings_struct: &Body) -> Tokens {
+fn to_enums(variant_name: &Ident, settings_struct: &Body) -> Tokens {
     if let &Struct(VariantData::Struct(ref strct)) = settings_struct {
         let mut field_names = vec![];
         let mut names = vec![];
@@ -157,15 +150,8 @@ fn to_enums(name: &Ident, variant_name: &Ident, settings_struct: &Body) -> Token
         }
         let names1 = &names;
         quote! {
-            #[derive(Clone)]
             pub enum #variant_name {
                 #(#names1(#types)),*
-            }
-
-            impl #name {
-                pub fn new() -> #name {
-                    #name::default()
-                }
             }
         }
     }
