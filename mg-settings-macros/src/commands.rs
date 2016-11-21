@@ -49,7 +49,25 @@ pub fn expand_commands_enum(mut ast: MacroInput) -> Tokens {
         .map(|name| to_dash_name(&name))
         .collect();
     let variant_names = &variant_names;
-    let variant_has_argument = &variant_info.has_argument;
+    let mut variant_names_with_argument = vec![];
+    let mut variant_names_without_argument = vec![];
+    for (name, &has_argument) in variant_names.iter().zip(variant_info.has_argument.iter()) {
+        if has_argument {
+            variant_names_with_argument.push(name);
+        }
+        else {
+            variant_names_without_argument.push(name);
+        }
+    }
+    let fn_has_argument = quote!{
+        fn has_argument(variant: &str) -> ::std::result::Result<bool, String> {
+            match variant {
+                #(#variant_names_with_argument)|* => Ok(true),
+                #(#variant_names_without_argument)|* => Ok(false),
+                _ => Err(format!("unknown command {}", variant)),
+            }
+        }
+    };
     quote! {
         impl ::mg_settings::EnumFromStr for #name {
             fn create(variant: &str, argument: &str) -> ::std::result::Result<#name, String> {
@@ -59,12 +77,7 @@ pub fn expand_commands_enum(mut ast: MacroInput) -> Tokens {
                 }
             }
 
-            fn has_argument(variant: &str) -> ::std::result::Result<bool, String> {
-                match variant {
-                    #(#variant_names => Ok(#variant_has_argument),)*
-                    _ => Err(format!("unknown command {}", variant)),
-                }
-            }
+            #fn_has_argument
         }
 
         #metadata_impl
