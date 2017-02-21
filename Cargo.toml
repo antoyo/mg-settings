@@ -7,9 +7,6 @@ license = "MIT"
 repository = "https://github.com/antoyo/mg-settings"
 documentation = "https://antoyo.github.io/mg-settings/mg_settings/"
 
-[features]
-nightly = []
-
 [dependencies]
 
 [dependencies.mg-settings-macros]

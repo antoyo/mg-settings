@@ -19,8 +19,6 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#![feature(proc_macro)]
-
 extern crate mg_settings;
 #[macro_use]
 extern crate mg_settings_macros;
