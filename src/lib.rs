@@ -26,6 +26,7 @@
 //! Call the `parse` function on the input.
 
 /*
+ *
  * TODO: create a new method instead of using words and find/unwrap.
  * TODO: add the attribute #[special_command] in the Command derive macro.
  * TODO: auto-include files.
