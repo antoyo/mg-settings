@@ -6,9 +6,6 @@ authors = ["Antoni Boucher <bouanto@zoho.com>"]
 [lib]
 proc-macro = true
 
-[features]
-nightly = []
-
 [dependencies]
 quote = "^0.3"
 syn = "^0.9"
