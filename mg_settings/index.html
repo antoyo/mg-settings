@@ -9,6 +9,7 @@
 
     <title>mg_settings - Rust</title>
 
+    <link rel="stylesheet" type="text/css" href="../normalize.css">
     <link rel="stylesheet" type="text/css" href="../rustdoc.css">
     <link rel="stylesheet" type="text/css" href="../main.css">
     
@@ -16,7 +17,7 @@
     
     
 </head>
-<body class="rustdoc">
+<body class="rustdoc mod">
     <!--[if lte IE 8]>
     <div class="warning">
         This old browser is unsupported and will most likely display funky
@@ -42,76 +43,119 @@
         </form>
     </nav>
 
-    <section id='main' class="content mod">
-<h1 class='fqn'><span class='in-band'>Crate <a class='mod' href=''>mg_settings</a></span><span class='out-of-band'><span id='render-detail'>
+    <section id='main' class="content">
+<h1 class='fqn'><span class='in-band'>Crate <a class="mod" href=''>mg_settings</a></span><span class='out-of-band'><span id='render-detail'>
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-0' class='srclink' href='../src/mg_settings/src/lib.rs.html#22-454' title='goto source code'>[src]</a></span></h1>
+               </span><a class='srclink' href='../src/mg_settings/lib.rs.html#22-477' title='goto source code'>[src]</a></span></h1>
 <div class='docblock'><p>Parse config files.</p>
-
-<h1 id='usage' class='section-header'><a href='#usage'>Usage</a></h1>
+<h1 id="usage" class="section-header"><a href="#usage">Usage</a></h1>
 <p>Call the <code>parse</code> function on the input.</p>
 </div><h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
 <table>
                        <tr class=' module-item'>
-                           <td><a class='mod' href='error/index.html'
-                                  title='mg_settings::error'>error</a></td>
+                           <td><a class="mod" href="error/index.html"
+                                  title='mod mg_settings::error'>error</a></td>
                            <td class='docblock-short'>
                                 <p>Parse error type.</p>
+
                            </td>
                        </tr>
                        <tr class=' module-item'>
-                           <td><a class='mod' href='key/index.html'
-                                  title='mg_settings::key'>key</a></td>
+                           <td><a class="mod" href="key/index.html"
+                                  title='mod mg_settings::key'>key</a></td>
                            <td class='docblock-short'>
                                 <p>Type for representing keys and functions for parsing strings into <code>Key</code>s.</p>
+
                            </td>
-                       </tr></table><h2 id='macros' class='section-header'><a href="#macros">Macros</a></h2>
-<table>
+                       </tr>
                        <tr class=' module-item'>
-                           <td><a class='macro' href='macro.commands.html'
-                                  title='mg_settings::commands'>commands</a></td>
+                           <td><a class="mod" href="settings/index.html"
+                                  title='mod mg_settings::settings'>settings</a></td>
                            <td class='docblock-short'>
-                                
+                                <p>Settings manager.</p>
+
                            </td>
                        </tr></table><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
 <table>
                        <tr class=' module-item'>
-                           <td><a class='struct' href='struct.Config.html'
-                                  title='mg_settings::Config'>Config</a></td>
+                           <td><a class="struct" href="struct.Config.html"
+                                  title='struct mg_settings::Config'>Config</a></td>
                            <td class='docblock-short'>
                                 <p>The parsing configuration.</p>
+
                            </td>
                        </tr>
                        <tr class=' module-item'>
-                           <td><a class='struct' href='struct.Parser.html'
-                                  title='mg_settings::Parser'>Parser</a></td>
+                           <td><a class="struct" href="struct.MetaData.html"
+                                  title='struct mg_settings::MetaData'>MetaData</a></td>
+                           <td class='docblock-short'>
+                                <p>Command/setting meta-data coming from the attributes.
+See <code>EnumMetaData</code> to see the list of supported attributes.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.Parser.html"
+                                  title='struct mg_settings::Parser'>Parser</a></td>
                            <td class='docblock-short'>
                                 <p>The config parser.</p>
+
                            </td>
                        </tr></table><h2 id='enums' class='section-header'><a href="#enums">Enums</a></h2>
 <table>
                        <tr class=' module-item'>
-                           <td><a class='enum' href='enum.Command.html'
-                                  title='mg_settings::Command'>Command</a></td>
+                           <td><a class="enum" href="enum.Command.html"
+                                  title='enum mg_settings::Command'>Command</a></td>
                            <td class='docblock-short'>
                                 <p>The <code>Command</code> enum represents a command from a config file.</p>
+
                            </td>
                        </tr>
                        <tr class=' module-item'>
-                           <td><a class='enum' href='enum.Value.html'
-                                  title='mg_settings::Value'>Value</a></td>
+                           <td><a class="enum" href="enum.Value.html"
+                                  title='enum mg_settings::Value'>Value</a></td>
                            <td class='docblock-short'>
                                 <p>The <code>Value</code> enum represents a value along with its type.</p>
+
                            </td>
                        </tr></table><h2 id='traits' class='section-header'><a href="#traits">Traits</a></h2>
 <table>
                        <tr class=' module-item'>
-                           <td><a class='trait' href='trait.EnumFromStr.html'
-                                  title='mg_settings::EnumFromStr'>EnumFromStr</a></td>
+                           <td><a class="trait" href="trait.CompletionValues.html"
+                                  title='trait mg_settings::CompletionValues'>CompletionValues</a></td>
+                           <td class='docblock-short'>
+                                <p>Trait to specify the completion values for a type.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="trait" href="trait.EnumFromStr.html"
+                                  title='trait mg_settings::EnumFromStr'>EnumFromStr</a></td>
                            <td class='docblock-short'>
                                 <p>The <code>EnumFromStr</code> trait is used to specify how to construct an enum value from a string.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="trait" href="trait.EnumMetaData.html"
+                                  title='trait mg_settings::EnumMetaData'>EnumMetaData</a></td>
+                           <td class='docblock-short'>
+                                <p>Tre <code>EnumMetaData</code> trait is used to get associated meta-data for the enum variants.
+The meta-data is specified using the following attributes:
+#[completion(hidden)]
+#[special_command]
+#[help(Command help)]</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="trait" href="trait.SettingCompletion.html"
+                                  title='trait mg_settings::SettingCompletion'>SettingCompletion</a></td>
+                           <td class='docblock-short'>
+                                <p>Trait specifying the value completions for settings.</p>
+
                            </td>
                        </tr></table></section>
     <section id='search' class="content hidden"></section>
@@ -169,11 +213,9 @@
     <script>
         window.rootPath = "../";
         window.currentCrate = "mg_settings";
-        window.playgroundUrl = "";
     </script>
     <script src="../jquery.js"></script>
     <script src="../main.js"></script>
-    <script src="../extra.js"></script>
     <script defer src="../search-index.js"></script>
 </body>
 </html>

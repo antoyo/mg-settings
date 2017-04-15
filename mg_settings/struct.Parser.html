@@ -9,6 +9,7 @@
 
     <title>mg_settings::Parser - Rust</title>
 
+    <link rel="stylesheet" type="text/css" href="../normalize.css">
     <link rel="stylesheet" type="text/css" href="../rustdoc.css">
     <link rel="stylesheet" type="text/css" href="../main.css">
     
@@ -16,7 +17,7 @@
     
     
 </head>
-<body class="rustdoc">
+<body class="rustdoc struct">
     <!--[if lte IE 8]>
     <div class="warning">
         This old browser is unsupported and will most likely display funky
@@ -42,22 +43,24 @@
         </form>
     </nav>
 
-    <section id='main' class="content struct">
-<h1 class='fqn'><span class='in-band'>Struct <a href='index.html'>mg_settings</a>::<wbr><a class='struct' href=''>Parser</a></span><span class='out-of-band'><span id='render-detail'>
+    <section id='main' class="content">
+<h1 class='fqn'><span class='in-band'>Struct <a href='index.html'>mg_settings</a>::<wbr><a class="struct" href=''>Parser</a></span><span class='out-of-band'><span id='render-detail'>
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a id='src-107' class='srclink' href='../src/mg_settings/src/lib.rs.html#133-138' title='goto source code'>[src]</a></span></h1>
+               </span><a class='srclink' href='../src/mg_settings/lib.rs.html#164-170' title='goto source code'>[src]</a></span></h1>
 <pre class='rust struct'>pub struct Parser&lt;T&gt; { /* fields omitted */ }</pre><div class='docblock'><p>The config parser.</p>
-</div><h2 id='methods'>Methods</h2><h3 class='impl'><span class='in-band'><code>impl&lt;T:&nbsp;<a class='trait' href='../mg_settings/trait.EnumFromStr.html' title='mg_settings::EnumFromStr'>EnumFromStr</a>&gt; <a class='struct' href='../mg_settings/struct.Parser.html' title='mg_settings::Parser'>Parser</a>&lt;T&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a id='src-113' class='srclink' href='../src/mg_settings/src/lib.rs.html#140-406' title='goto source code'>[src]</a></span></h3>
-<div class='impl-items'><h4 id='method.new' class='method'><span id='new.v' class='invisible'><code>fn <a href='#method.new' class='fnname'>new</a>() -&gt; Self</code></span></h4>
+</div><h2 id='methods'>Methods</h2><h3 class='impl'><span class='in-band'><code>impl&lt;T:&nbsp;<a class="trait" href="../mg_settings/trait.EnumFromStr.html" title="trait mg_settings::EnumFromStr">EnumFromStr</a>&gt; <a class="struct" href="../mg_settings/struct.Parser.html" title="struct mg_settings::Parser">Parser</a>&lt;T&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../src/mg_settings/lib.rs.html#172-452' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.new' class="method"><span id='new.v' class='invisible'><code>fn <a href='#method.new' class='fnname'>new</a>() -&gt; Self</code></span></h4>
 <div class='docblock'><p>Create a new parser without config.</p>
-</div><h4 id='method.new_with_config' class='method'><span id='new_with_config.v' class='invisible'><code>fn <a href='#method.new_with_config' class='fnname'>new_with_config</a>(config: <a class='struct' href='../mg_settings/struct.Config.html' title='mg_settings::Config'>Config</a>) -&gt; Self</code></span></h4>
+</div><h4 id='method.new_with_config' class="method"><span id='new_with_config.v' class='invisible'><code>fn <a href='#method.new_with_config' class='fnname'>new_with_config</a>(config: <a class="struct" href="../mg_settings/struct.Config.html" title="struct mg_settings::Config">Config</a>) -&gt; Self</code></span></h4>
 <div class='docblock'><p>Create a new parser with config.</p>
-</div><h4 id='method.parse' class='method'><span id='parse.v' class='invisible'><code>fn <a href='#method.parse' class='fnname'>parse</a>&lt;R:&nbsp;<a class='trait' href='https://doc.rust-lang.org/nightly/std/io/trait.BufRead.html' title='std::io::BufRead'>BufRead</a>&gt;(&amp;mut self, input: R) -&gt; <a class='type' href='../mg_settings/error/type.Result.html' title='mg_settings::error::Result'>Result</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='enum' href='../mg_settings/enum.Command.html' title='mg_settings::Command'>Command</a>&lt;T&gt;&gt;&gt;</code></span></h4>
+</div><h4 id='method.parse' class="method"><span id='parse.v' class='invisible'><code>fn <a href='#method.parse' class='fnname'>parse</a>&lt;R:&nbsp;<a class="trait" href="https://doc.rust-lang.org/nightly/std/io/trait.BufRead.html" title="trait std::io::BufRead">BufRead</a>&gt;(&amp;mut self, input: R) -&gt; <a class="type" href="../mg_settings/error/type.Result.html" title="type mg_settings::error::Result">Result</a>&lt;<a class="struct" href="https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html" title="struct collections::vec::Vec">Vec</a>&lt;<a class="enum" href="../mg_settings/enum.Command.html" title="enum mg_settings::Command">Command</a>&lt;T&gt;&gt;&gt;</code></span></h4>
 <div class='docblock'><p>Parse settings.</p>
-</div><h4 id='method.parse_line' class='method'><span id='parse_line.v' class='invisible'><code>fn <a href='#method.parse_line' class='fnname'>parse_line</a>(&amp;mut self, line: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>) -&gt; <a class='type' href='../mg_settings/error/type.Result.html' title='mg_settings::error::Result'>Result</a>&lt;<a class='enum' href='../mg_settings/enum.Command.html' title='mg_settings::Command'>Command</a>&lt;T&gt;&gt;</code></span></h4>
+</div><h4 id='method.parse_line' class="method"><span id='parse_line.v' class='invisible'><code>fn <a href='#method.parse_line' class='fnname'>parse_line</a>(&amp;mut self, line: &amp;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>) -&gt; <a class="type" href="../mg_settings/error/type.Result.html" title="type mg_settings::error::Result">Result</a>&lt;<a class="enum" href="../mg_settings/enum.Command.html" title="enum mg_settings::Command">Command</a>&lt;T&gt;&gt;</code></span></h4>
 <div class='docblock'><p>Parse a single line of settings.</p>
+</div><h4 id='method.set_include_path' class="method"><span id='set_include_path.v' class='invisible'><code>fn <a href='#method.set_include_path' class='fnname'>set_include_path</a>&lt;P:&nbsp;<a class="trait" href="https://doc.rust-lang.org/nightly/core/convert/trait.AsRef.html" title="trait core::convert::AsRef">AsRef</a>&lt;<a class="struct" href="https://doc.rust-lang.org/nightly/std/path/struct.Path.html" title="struct std::path::Path">Path</a>&gt;&gt;(&amp;mut self, directory: P)</code></span></h4>
+<div class='docblock'><p>Set the directory where the include command will look for files to include.</p>
 </div></div></section>
     <section id='search' class="content hidden"></section>
 
@@ -114,11 +117,9 @@
     <script>
         window.rootPath = "../";
         window.currentCrate = "mg_settings";
-        window.playgroundUrl = "";
     </script>
     <script src="../jquery.js"></script>
     <script src="../main.js"></script>
-    <script src="../extra.js"></script>
     <script defer src="../search-index.js"></script>
 </body>
 </html>
