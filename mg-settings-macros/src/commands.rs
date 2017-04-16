@@ -20,7 +20,7 @@
  */
 
 use quote::Tokens;
-use syn::{Ident, MacroInput};
+use syn::{Body, Ident, MacroInput, VariantData};
 
 use attributes::to_metadata_impl;
 use string::to_dash_name;
@@ -68,6 +68,7 @@ pub fn expand_commands_enum(mut ast: MacroInput) -> Tokens {
             }
         }
     };
+    let clone = derive_clone(&ast);
     quote! {
         impl ::mg_settings::EnumFromStr for #name {
             fn create(variant: &str, argument: &str) -> ::std::result::Result<#name, String> {
@@ -80,6 +81,62 @@ pub fn expand_commands_enum(mut ast: MacroInput) -> Tokens {
             #fn_has_argument
         }
 
+        #clone
+
         #metadata_impl
+    }
+}
+
+fn derive_clone(ast: &MacroInput) -> Tokens {
+    let name = &ast.ident;
+
+    if let Body::Enum(ref variants) = ast.body {
+        let variant_idents_values: Vec<_> = variants.iter().map(|variant| {
+            let has_value =
+                if let VariantData::Tuple(_) = variant.data {
+                    true
+                }
+                else {
+                    false
+                };
+            (&variant.ident, has_value)
+        }).collect();
+        let variant_patterns = variant_idents_values.iter().map(|&(ref ident, has_value)| {
+            if has_value {
+                quote! {
+                    #name::#ident(ref value)
+                }
+            }
+            else {
+                quote! {
+                    #name::#ident
+                }
+            }
+        });
+        let variant_values = variant_idents_values.iter().map(|&(ref ident, has_value)| {
+            if has_value {
+                quote! {
+                    #name::#ident(value.clone())
+                }
+            }
+            else {
+                quote! {
+                    #name::#ident
+                }
+            }
+        });
+
+        quote! {
+            impl Clone for #name {
+                fn clone(&self) -> Self {
+                    match *self {
+                        #(#variant_patterns => #variant_values,)*
+                    }
+                }
+            }
+        }
+    }
+    else {
+        panic!("Expected enum");
     }
 }
