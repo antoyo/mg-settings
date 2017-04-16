@@ -14,7 +14,7 @@ nightly = []
 
 [dependencies.mg-settings-macros]
 path = "mg-settings-macros"
-version = "^0.0.1"
+version = "^0.0.2"
 
 [package.metadata.release]
 upload-doc = true
