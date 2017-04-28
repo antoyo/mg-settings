@@ -157,7 +157,7 @@ pub struct Config {
     /// The application library commands.
     pub application_commands: Vec<String>,
     /// The available mapping modes for the map command.
-    pub mapping_modes: Vec<String>,
+    pub mapping_modes: Vec<&'static str>,
 }
 
 /// The config parser.
@@ -272,11 +272,11 @@ impl<T: EnumFromStr> Parser<T> {
                         let rest = self.get_rest(line, start_index)?;
                         self.set_command(rest)
                     }
-                    else if end3 == "map" && self.config.mapping_modes.contains(&start3.to_string()) {
+                    else if end3 == "map" && self.config.mapping_modes.contains(&start3) {
                         let rest = self.get_rest(line, start_index)?;
                         self.map_command(rest, start3)
                     }
-                    else if end5 == "unmap" && self.config.mapping_modes.contains(&start5.to_string()) {
+                    else if end5 == "unmap" && self.config.mapping_modes.contains(&start5) {
                         let rest = self.get_rest(line, start_index)?;
                         self.unmap_command(rest, start5)
                     }
