@@ -19,7 +19,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use error::{Error, Result};
+use error::{Error, ParseError, Result};
 use error::ErrorType::Parse;
 use position::Pos;
 
@@ -54,7 +54,7 @@ pub fn check_ident(string: String, pos: &Pos) -> Result<String> {
             return Ok(string)
         }
     }
-    Err(Box::new(Error::new(Parse, string, "identifier".to_string(), pos.clone())))
+    Err(Error::Parse(ParseError::new(Parse, string, "identifier".to_string(), pos.clone())))
 }
 
 /// Parse a single word.

@@ -23,14 +23,49 @@
 
 use std::error;
 use std::fmt::{self, Display, Formatter};
+use std::io;
 use std::result;
 
 use position::Pos;
+use self::Error::*;
 use self::SettingError::*;
+
+/// Errors which can happen when parsing a settings file.
+#[derive(Debug)]
+pub enum Error {
+    /// Input/output error.
+    Io(io::Error),
+    /// Parse error.
+    Parse(ParseError),
+}
+
+impl Display for Error {
+    fn fmt(&self, formatter: &mut Formatter) -> ::std::result::Result<(), fmt::Error> {
+        match *self {
+            Io(ref error) => error.fmt(formatter),
+            Parse(ref error) => error.fmt(formatter),
+        }
+    }
+}
+
+impl error::Error for Error {
+    fn description(&self) -> &str {
+        match *self {
+            Io(ref error) => error.description(),
+            Parse(ref error) => error.description(),
+        }
+    }
+}
+
+impl From<io::Error> for Error {
+    fn from(error: io::Error) -> Self {
+        Io(error)
+    }
+}
 
 /// Struct which holds information about an error at a specific position.
 #[derive(Debug, PartialEq)]
-pub struct Error {
+pub struct ParseError {
     /// The expected token.
     pub expected: String,
     pos: Pos,
@@ -40,10 +75,10 @@ pub struct Error {
     pub unexpected: String,
 }
 
-impl Error {
+impl ParseError {
     /// Create a new error.
-    pub fn new(typ: ErrorType, unexpected: String, expected: String, pos: Pos) -> Error {
-        Error {
+    pub fn new(typ: ErrorType, unexpected: String, expected: String, pos: Pos) -> ParseError {
+        ParseError {
             expected: expected,
             pos: pos,
             typ: typ,
@@ -52,13 +87,13 @@ impl Error {
     }
 }
 
-impl Display for Error {
+impl Display for ParseError {
     fn fmt(&self, formatter: &mut Formatter) -> ::std::result::Result<(), fmt::Error> {
         write!(formatter, "unexpected {}, expecting {} on {}", self.unexpected, self.expected, self.pos)
     }
 }
 
-impl error::Error for Error {
+impl error::Error for ParseError {
     fn description(&self) -> &str {
         "parse error"
     }
@@ -123,4 +158,4 @@ impl error::Error for SettingError {
 
 /// A type alias over the specific `Result` type used by the parser to indicate whether it is
 /// successful or not.
-pub type Result<T> = ::std::result::Result<T, Box<::std::error::Error>>;
+pub type Result<T> = ::std::result::Result<T, Error>;

@@ -23,7 +23,7 @@
 
 use std::fmt::{self, Display, Formatter};
 
-use error::{Error, Result};
+use error::{Error, ParseError, Result};
 use error::ErrorType::Parse;
 use position::Pos;
 
@@ -151,7 +151,7 @@ fn parse_key(input: &str, line_num: usize, column_num: usize) -> Result<(Key, us
             Some('<') => {
                 let key: String = chars.take_while(|&character| character != '>').collect();
                 if !input.contains('>') {
-                    return Err(Box::new(Error::new(
+                    return Err(Error::Parse(ParseError::new(
                         Parse,
                         "(none)".to_string(),
                         ">".to_string(),
@@ -206,7 +206,7 @@ fn parse_key(input: &str, line_num: usize, column_num: usize) -> Result<(Key, us
                                         (constructor(Char(character)), 5)
                                     }
                                     else {
-                                        return Err(Box::new(Error::new(
+                                        return Err(Error::Parse(ParseError::new(
                                             Parse,
                                             end.to_string(),
                                             "one character".to_string(),
@@ -229,7 +229,7 @@ fn parse_key(input: &str, line_num: usize, column_num: usize) -> Result<(Key, us
                     'A' ... 'Z' | 'a' ... 'z' => (Char(character), 1),
                     _ if characters.contains(character) => (Char(character), 1),
                     _ =>
-                        return Err(Box::new(Error::new(
+                        return Err(Error::Parse(ParseError::new(
                             Parse,
                             character.to_string(),
                             "key".to_string(),
@@ -287,7 +287,7 @@ fn special_key(key: &str, line_num: usize, column_num: usize, in_special_key: bo
             "Space" => (Space, 7),
             "Tab" => (Tab, 5),
             "Up" => (Up, 4),
-            _ => return Err(Box::new(Error::new(
+            _ => return Err(Error::Parse(ParseError::new(
                      Parse,
                      key.to_string(),
                      expected.to_string(),
