@@ -148,7 +148,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */</span>
 
-<span class="kw">use</span> <span class="ident">error</span>::{<span class="ident">Error</span>, <span class="prelude-ty">Result</span>};
+<span class="kw">use</span> <span class="ident">error</span>::{<span class="ident">Error</span>, <span class="ident">ParseError</span>, <span class="prelude-ty">Result</span>};
 <span class="kw">use</span> <span class="ident">error</span>::<span class="ident">ErrorType</span>::<span class="ident">Parse</span>;
 <span class="kw">use</span> <span class="ident">position</span>::<span class="ident">Pos</span>;
 
@@ -183,7 +183,7 @@
             <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">string</span>)
         }
     }
-    <span class="prelude-val">Err</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">Error</span>::<span class="ident">new</span>(<span class="ident">Parse</span>, <span class="ident">string</span>, <span class="string">&quot;identifier&quot;</span>.<span class="ident">to_string</span>(), <span class="ident">pos</span>.<span class="ident">clone</span>())))
+    <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">Parse</span>(<span class="ident">ParseError</span>::<span class="ident">new</span>(<span class="ident">Parse</span>, <span class="ident">string</span>, <span class="string">&quot;identifier&quot;</span>.<span class="ident">to_string</span>(), <span class="ident">pos</span>.<span class="ident">clone</span>())))
 }
 
 <span class="doccomment">/// Parse a single word.</span>

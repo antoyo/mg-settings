@@ -29,7 +29,7 @@
 
     <nav class="sidebar">
         
-        <p class='location'><a href='../index.html'>mg_settings</a></p><script>window.sidebarCurrent = {name: 'error', ty: 'mod', relpath: '../'};</script><script defer src="../sidebar-items.js"></script>
+        <p class='location'>Module error</p><div class="block items"><ul><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#types">Type Definitions</a></li></ul></div><p class='location'><a href='../index.html'>mg_settings</a></p><script>window.sidebarCurrent = {name: 'error', ty: 'mod', relpath: '../'};</script><script defer src="../sidebar-items.js"></script>
     </nav>
 
     <nav class="sub">
@@ -48,25 +48,30 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a class='srclink' href='../../src/mg_settings/error.rs.html#22-126' title='goto source code'>[src]</a></span></h1>
+               </span><a class='srclink' href='../../src/mg_settings/error.rs.html#22-161' title='goto source code'>[src]</a></span></h1>
 <div class='docblock'><p>Parse error type.</p>
 </div><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
 <table>
                        <tr class=' module-item'>
-                           <td><a class="struct" href="struct.Error.html"
-                                  title='struct mg_settings::error::Error'>Error</a></td>
+                           <td><a class="struct" href="struct.ParseError.html"
+                                  title='struct mg_settings::error::ParseError'>ParseError</a></td>
                            <td class='docblock-short'>
                                 <p>Struct which holds information about an error at a specific position.</p>
-
                            </td>
                        </tr></table><h2 id='enums' class='section-header'><a href="#enums">Enums</a></h2>
 <table>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.Error.html"
+                                  title='enum mg_settings::error::Error'>Error</a></td>
+                           <td class='docblock-short'>
+                                <p>Errors which can happen when parsing a settings file.</p>
+                           </td>
+                       </tr>
                        <tr class=' module-item'>
                            <td><a class="enum" href="enum.ErrorType.html"
                                   title='enum mg_settings::error::ErrorType'>ErrorType</a></td>
                            <td class='docblock-short'>
                                 <p>A set of error types that can occur parsing the settings file.</p>
-
                            </td>
                        </tr>
                        <tr class=' module-item'>
@@ -74,7 +79,6 @@
                                   title='enum mg_settings::error::SettingError'>SettingError</a></td>
                            <td class='docblock-short'>
                                 <p>Error when getting/setting settings.</p>
-
                            </td>
                        </tr></table><h2 id='types' class='section-header'><a href="#types">Type Definitions</a></h2>
 <table>
@@ -84,7 +88,6 @@
                            <td class='docblock-short'>
                                 <p>A type alias over the specific <code>Result</code> type used by the parser to indicate whether it is
 successful or not.</p>
-
                            </td>
                        </tr></table></section>
     <section id='search' class="content hidden"></section>

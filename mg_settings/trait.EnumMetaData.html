@@ -29,7 +29,7 @@
 
     <nav class="sidebar">
         
-        <p class='location'><a href='index.html'>mg_settings</a></p><script>window.sidebarCurrent = {name: 'EnumMetaData', ty: 'trait', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+        <p class='location'>Trait EnumMetaData</p><div class="block items"><ul><li><a href="#required-methods">Required Methods</a></li><li><a href="#implementors">Implementors</a></li></ul></div><p class='location'><a href='index.html'>mg_settings</a></p><script>window.sidebarCurrent = {name: 'EnumMetaData', ty: 'trait', relpath: ''};</script><script defer src="sidebar-items.js"></script>
     </nav>
 
     <nav class="sub">
@@ -52,11 +52,11 @@
 <pre class='rust trait'>pub trait EnumMetaData {
     fn <a href='#tymethod.get_metadata' class='fnname'>get_metadata</a>() -&gt; <a class="struct" href="https://doc.rust-lang.org/nightly/std/collections/hash/map/struct.HashMap.html" title="struct std::collections::hash::map::HashMap">HashMap</a>&lt;<a class="struct" href="https://doc.rust-lang.org/nightly/collections/string/struct.String.html" title="struct collections::string::String">String</a>, <a class="struct" href="../mg_settings/struct.MetaData.html" title="struct mg_settings::MetaData">MetaData</a>&gt;;
 }</pre><div class='docblock'><p>Tre <code>EnumMetaData</code> trait is used to get associated meta-data for the enum variants.
-The meta-data is specified using the following attributes:
-#[completion(hidden)]
-#[special_command]
-#[help(Command help)]</p>
-</div>
+The meta-data is specified using the following attributes:</p>
+
+<h1 id='completionhidden' class='section-header'><a href='#completionhidden'>[completion(hidden)]</a></h1>
+<h1 id='special_command' class='section-header'><a href='#special_command'>[special_command]</a></h1>
+<h1 id='helpcommand-help' class='section-header'><a href='#helpcommand-help'>[help(Command help)]</a></h1></div>
             <h2 id='required-methods'>Required Methods</h2>
             <div class='methods'>
         <h3 id='tymethod.get_metadata' class='method'><span id='get_metadata.v' class='invisible'><code>fn <a href='#tymethod.get_metadata' class='fnname'>get_metadata</a>() -&gt; <a class="struct" href="https://doc.rust-lang.org/nightly/std/collections/hash/map/struct.HashMap.html" title="struct std::collections::hash::map::HashMap">HashMap</a>&lt;<a class="struct" href="https://doc.rust-lang.org/nightly/collections/string/struct.String.html" title="struct collections::string::String">String</a>, <a class="struct" href="../mg_settings/struct.MetaData.html" title="struct mg_settings::MetaData">MetaData</a>&gt;</code></span></h3><div class='docblock'><p>Get the metadata associated with the enum.</p>

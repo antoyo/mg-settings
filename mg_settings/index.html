@@ -29,7 +29,7 @@
 
     <nav class="sidebar">
         
-        <p class='location'></p><script>window.sidebarCurrent = {name: 'mg_settings', ty: 'mod', relpath: '../'};</script>
+        <p class='location'>Crate mg_settings</p><div class="block items"><ul><li><a href="#modules">Modules</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#traits">Traits</a></li></ul></div><p class='location'></p><script>window.sidebarCurrent = {name: 'mg_settings', ty: 'mod', relpath: '../'};</script>
     </nav>
 
     <nav class="sub">
@@ -50,7 +50,8 @@
                    </a>
                </span><a class='srclink' href='../src/mg_settings/lib.rs.html#22-477' title='goto source code'>[src]</a></span></h1>
 <div class='docblock'><p>Parse config files.</p>
-<h1 id="usage" class="section-header"><a href="#usage">Usage</a></h1>
+
+<h1 id='usage' class='section-header'><a href='#usage'>Usage</a></h1>
 <p>Call the <code>parse</code> function on the input.</p>
 </div><h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
 <table>
@@ -59,7 +60,6 @@
                                   title='mod mg_settings::error'>error</a></td>
                            <td class='docblock-short'>
                                 <p>Parse error type.</p>
-
                            </td>
                        </tr>
                        <tr class=' module-item'>
@@ -67,7 +67,6 @@
                                   title='mod mg_settings::key'>key</a></td>
                            <td class='docblock-short'>
                                 <p>Type for representing keys and functions for parsing strings into <code>Key</code>s.</p>
-
                            </td>
                        </tr>
                        <tr class=' module-item'>
@@ -75,7 +74,6 @@
                                   title='mod mg_settings::settings'>settings</a></td>
                            <td class='docblock-short'>
                                 <p>Settings manager.</p>
-
                            </td>
                        </tr></table><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
 <table>
@@ -84,7 +82,6 @@
                                   title='struct mg_settings::Config'>Config</a></td>
                            <td class='docblock-short'>
                                 <p>The parsing configuration.</p>
-
                            </td>
                        </tr>
                        <tr class=' module-item'>
@@ -93,7 +90,6 @@
                            <td class='docblock-short'>
                                 <p>Command/setting meta-data coming from the attributes.
 See <code>EnumMetaData</code> to see the list of supported attributes.</p>
-
                            </td>
                        </tr>
                        <tr class=' module-item'>
@@ -101,7 +97,6 @@ See <code>EnumMetaData</code> to see the list of supported attributes.</p>
                                   title='struct mg_settings::Parser'>Parser</a></td>
                            <td class='docblock-short'>
                                 <p>The config parser.</p>
-
                            </td>
                        </tr></table><h2 id='enums' class='section-header'><a href="#enums">Enums</a></h2>
 <table>
@@ -110,7 +105,6 @@ See <code>EnumMetaData</code> to see the list of supported attributes.</p>
                                   title='enum mg_settings::Command'>Command</a></td>
                            <td class='docblock-short'>
                                 <p>The <code>Command</code> enum represents a command from a config file.</p>
-
                            </td>
                        </tr>
                        <tr class=' module-item'>
@@ -118,7 +112,6 @@ See <code>EnumMetaData</code> to see the list of supported attributes.</p>
                                   title='enum mg_settings::Value'>Value</a></td>
                            <td class='docblock-short'>
                                 <p>The <code>Value</code> enum represents a value along with its type.</p>
-
                            </td>
                        </tr></table><h2 id='traits' class='section-header'><a href="#traits">Traits</a></h2>
 <table>
@@ -127,7 +120,6 @@ See <code>EnumMetaData</code> to see the list of supported attributes.</p>
                                   title='trait mg_settings::CompletionValues'>CompletionValues</a></td>
                            <td class='docblock-short'>
                                 <p>Trait to specify the completion values for a type.</p>
-
                            </td>
                        </tr>
                        <tr class=' module-item'>
@@ -135,7 +127,6 @@ See <code>EnumMetaData</code> to see the list of supported attributes.</p>
                                   title='trait mg_settings::EnumFromStr'>EnumFromStr</a></td>
                            <td class='docblock-short'>
                                 <p>The <code>EnumFromStr</code> trait is used to specify how to construct an enum value from a string.</p>
-
                            </td>
                        </tr>
                        <tr class=' module-item'>
@@ -143,11 +134,7 @@ See <code>EnumMetaData</code> to see the list of supported attributes.</p>
                                   title='trait mg_settings::EnumMetaData'>EnumMetaData</a></td>
                            <td class='docblock-short'>
                                 <p>Tre <code>EnumMetaData</code> trait is used to get associated meta-data for the enum variants.
-The meta-data is specified using the following attributes:
-#[completion(hidden)]
-#[special_command]
-#[help(Command help)]</p>
-
+The meta-data is specified using the following attributes:</p>
                            </td>
                        </tr>
                        <tr class=' module-item'>
@@ -155,7 +142,6 @@ The meta-data is specified using the following attributes:
                                   title='trait mg_settings::SettingCompletion'>SettingCompletion</a></td>
                            <td class='docblock-short'>
                                 <p>Trait specifying the value completions for settings.</p>
-
                            </td>
                        </tr></table></section>
     <section id='search' class="content hidden"></section>

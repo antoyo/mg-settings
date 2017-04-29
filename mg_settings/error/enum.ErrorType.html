@@ -29,7 +29,7 @@
 
     <nav class="sidebar">
         
-        <p class='location'><a href='../index.html'>mg_settings</a>::<wbr><a href='index.html'>error</a></p><script>window.sidebarCurrent = {name: 'ErrorType', ty: 'enum', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+        <p class='location'>Enum ErrorType</p><div class="block items"><ul><li><a href="#variants">Variants</a></li><li><a href="#implementations">Trait Implementations</a></li></ul></div><p class='location'><a href='../index.html'>mg_settings</a>::<wbr><a href='index.html'>error</a></p><script>window.sidebarCurrent = {name: 'ErrorType', ty: 'enum', relpath: ''};</script><script defer src="sidebar-items.js"></script>
     </nav>
 
     <nav class="sub">
@@ -48,22 +48,22 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a class='srclink' href='../../src/mg_settings/error.rs.html#69-78' title='goto source code'>[src]</a></span></h1>
+               </span><a class='srclink' href='../../src/mg_settings/error.rs.html#104-113' title='goto source code'>[src]</a></span></h1>
 <pre class='rust enum'>pub enum ErrorType {
     MissingArgument,
     NoCommand,
     Parse,
     UnknownCommand,
 }</pre><div class='docblock'><p>A set of error types that can occur parsing the settings file.</p>
-</div><h2 class='variants'>Variants</h2>
+</div><h2 id='variants' class='variants'>Variants</h2>
 <span id='variant.MissingArgument' class='variant'><span id='MissingArgument.v' class='invisible'><code>MissingArgument</code></span></span><div class='docblock'><p>A missing argument.</p>
 </div><span id='variant.NoCommand' class='variant'><span id='NoCommand.v' class='invisible'><code>NoCommand</code></span></span><div class='docblock'><p>No command (or a comment) was entered.</p>
 </div><span id='variant.Parse' class='variant'><span id='Parse.v' class='invisible'><code>Parse</code></span></span><div class='docblock'><p>Parse error.</p>
 </div><span id='variant.UnknownCommand' class='variant'><span id='UnknownCommand.v' class='invisible'><code>UnknownCommand</code></span></span><div class='docblock'><p>Unknown command.</p>
-</div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><span class='in-band'><code>impl <a class="trait" href="https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html" title="trait core::fmt::Debug">Debug</a> for <a class="enum" href="../../mg_settings/error/enum.ErrorType.html" title="enum mg_settings::error::ErrorType">ErrorType</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/mg_settings/error.rs.html#68' title='goto source code'>[src]</a></span></h3>
+</div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><span class='in-band'><code>impl <a class="trait" href="https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html" title="trait core::fmt::Debug">Debug</a> for <a class="enum" href="../../mg_settings/error/enum.ErrorType.html" title="enum mg_settings::error::ErrorType">ErrorType</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/mg_settings/error.rs.html#103' title='goto source code'>[src]</a></span></h3>
 <div class='impl-items'><h4 id='method.fmt' class="method"><span id='fmt.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#tymethod.fmt' class='fnname'>fmt</a>(&amp;self, __arg_0: &amp;mut <a class="struct" href="https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html" title="struct core::fmt::Formatter">Formatter</a>) -&gt; <a class="type" href="https://doc.rust-lang.org/nightly/core/fmt/type.Result.html" title="type core::fmt::Result">Result</a></code></span></h4>
 <div class='docblock'><p>Formats the value using the given formatter.</p>
-</div></div><h3 class='impl'><span class='in-band'><code>impl <a class="trait" href="https://doc.rust-lang.org/nightly/core/cmp/trait.PartialEq.html" title="trait core::cmp::PartialEq">PartialEq</a> for <a class="enum" href="../../mg_settings/error/enum.ErrorType.html" title="enum mg_settings::error::ErrorType">ErrorType</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/mg_settings/error.rs.html#68' title='goto source code'>[src]</a></span></h3>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class="trait" href="https://doc.rust-lang.org/nightly/core/cmp/trait.PartialEq.html" title="trait core::cmp::PartialEq">PartialEq</a> for <a class="enum" href="../../mg_settings/error/enum.ErrorType.html" title="enum mg_settings::error::ErrorType">ErrorType</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../../src/mg_settings/error.rs.html#103' title='goto source code'>[src]</a></span></h3>
 <div class='impl-items'><h4 id='method.eq' class="method"><span id='eq.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/cmp/trait.PartialEq.html#tymethod.eq' class='fnname'>eq</a>(&amp;self, __arg_0: &amp;<a class="enum" href="../../mg_settings/error/enum.ErrorType.html" title="enum mg_settings::error::ErrorType">ErrorType</a>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a></code></span></h4>
 <div class='docblock'><p>This method tests for <code>self</code> and <code>other</code> values to be equal, and is used by <code>==</code>. <a href="https://doc.rust-lang.org/nightly/core/cmp/trait.PartialEq.html#tymethod.eq">Read more</a></p>
 </div><h4 id='method.ne' class="method"><span id='ne.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/cmp/trait.PartialEq.html#method.ne' class='fnname'>ne</a>(&amp;self, other: &amp;Rhs) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a></code><div class='since' title='Stable since Rust version 1.0.0'>1.0.0</div></span></h4>
