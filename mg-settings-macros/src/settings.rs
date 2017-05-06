@@ -23,6 +23,7 @@ use quote::Tokens;
 use syn::{Attribute, Body, Ident, MacroInput, Path, VariantData};
 use syn::Body::{Enum, Struct};
 use syn::MetaItem::{List, Word};
+use syn::NestedMetaItem::MetaItem;
 use syn::Ty;
 
 use attributes::to_metadata_impl;
@@ -261,7 +262,7 @@ pub fn to_setting_completion_fn(name: &Ident, body: &Body) -> Tokens {
             for attribute in &field.attrs {
                 if let &Attribute { value: List(ref ident, ref args), .. } = attribute {
                     if ident == "completion" {
-                        if let Word(ref arg_ident) = args[0] {
+                        if let MetaItem(Word(ref arg_ident)) = args[0] {
                             if arg_ident == "hidden" {
                                 continue 'field_loop;
                             }

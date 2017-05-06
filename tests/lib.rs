@@ -25,7 +25,32 @@ extern crate mg_settings_macros;
 
 use mg_settings::{Config, EnumFromStr, Parser};
 use mg_settings::Command::{self, App, Custom, Map, Set, Unmap};
-use mg_settings::key::Key::{Backspace, Char, Control, Down, Enter, Escape, F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, Left, Right, Shift, Space, Tab, Up};
+use mg_settings::key::Key::{
+    Backspace,
+    Char,
+    Control,
+    Down,
+    Enter,
+    Escape,
+    F1,
+    F2,
+    F3,
+    F4,
+    F5,
+    F6,
+    F7,
+    F8,
+    F9,
+    F10,
+    F11,
+    F12,
+    Left,
+    Right,
+    Shift,
+    Space,
+    Tab,
+    Up,
+};
 use mg_settings::Value::{Bool, Float, Int, Str};
 
 use CustomCommand::*;
@@ -186,7 +211,7 @@ fn parse_error(input: &str) -> String {
 fn parse_error_with_config(input: &str) -> String {
     let mut parser = CommandParser::new_with_config(Config {
         application_commands: vec![],
-        mapping_modes: vec!["n".to_string(), "i".to_string(), "c".to_string()],
+        mapping_modes: vec!["n", "i", "c"],
     });
     parser.parse(input.as_bytes(), ).unwrap_err().to_string()
 }
@@ -205,7 +230,7 @@ fn parse_string_no_include_path(input: &str) -> Vec<Command<CustomCommand>> {
 fn parse_string_with_config(input: &str) -> Vec<Command<CustomCommand>> {
     let mut parser = CommandParser::new_with_config(Config {
         application_commands: vec!["complete-next".to_string()],
-        mapping_modes: vec!["n".to_string(), "i".to_string(), "c".to_string()],
+        mapping_modes: vec!["n", "i", "c"],
     });
     parser.parse(input.as_bytes()).unwrap()
 }

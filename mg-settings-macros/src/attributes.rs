@@ -24,6 +24,7 @@ use syn::{Attribute, Body, Ident};
 use syn::Body::{Enum, Struct};
 use syn::Lit::Str;
 use syn::MetaItem::{List, NameValue, Word};
+use syn::NestedMetaItem::MetaItem;
 use syn::VariantData::{self, Unit};
 
 use string::to_dash_name;
@@ -48,14 +49,14 @@ macro_rules! collect_and_transform {
                 if let &Attribute { value: List(ref ident, ref args), .. } = attribute {
                     match ident.as_ref() {
                         "completion" => {
-                            if let Word(ref arg_ident) = args[0] {
+                            if let MetaItem(Word(ref arg_ident)) = args[0] {
                                 if arg_ident == "hidden" {
                                     hidden = true;
                                 }
                             }
                         },
                         "help" => {
-                            if let NameValue(ref arg_ident, ref value) = args[0] {
+                            if let MetaItem(NameValue(ref arg_ident, ref value)) = args[0] {
                                 if arg_ident == "text" {
                                     if let &Str(ref description, _) = value {
                                         help = description.clone();
