@@ -47,6 +47,13 @@ impl<'a> StrExt<'a> for &'a str {
     }
 }
 
+/// A word found in a string with its index.
+#[derive(Debug, PartialEq)]
+pub struct Word<'a> {
+    pub index: usize,
+    pub word: &'a str,
+}
+
 /// Check if a string is an identifier.
 pub fn check_ident(string: String, pos: &Pos) -> Result<String> {
     if string.chars().all(|character| character.is_alphanumeric() || character == '-' || character == '_') {
@@ -58,24 +65,27 @@ pub fn check_ident(string: String, pos: &Pos) -> Result<String> {
 }
 
 /// Parse a single word.
-pub fn maybe_word(input: &str) -> Option<&str> {
-    input.split_whitespace()
-        .next()
+pub fn maybe_word(input: &str) -> Option<Word> {
+    let word = word(input);
+    if word.word.is_empty() {
+        None
+    }
+    else {
+        Some(word)
+    }
 }
 
 /// Parse a single word.
 /// This function assumes there is always at least a word in `input`.
-pub fn word(input: &str) -> &str {
-    input.split_whitespace()
-        .next()
-        .unwrap()
-}
-
-/// A word found by the words function.
-#[derive(Debug, PartialEq)]
-pub struct Word<'a> {
-    pub index: usize,
-    pub word: &'a str,
+pub fn word(input: &str) -> Word {
+    let start = input.chars().take_while(|c| c.is_whitespace()).count();
+    let end = input[start..].find(char::is_whitespace)
+        .map(|index| index + start)
+        .unwrap_or(input.len());
+    Word {
+        index: start,
+        word: &input[start..end],
+    }
 }
 
 /// Parse `count` words.
@@ -113,7 +123,22 @@ pub fn words(input: &str, count: usize) -> Option<Vec<Word>> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Word, words};
+    use super::{Word, word, words};
+
+    #[test]
+    fn test_word() {
+        let result = word("hello world");
+        assert_eq!(0, result.index);
+        assert_eq!("hello", result.word);
+
+        let result = word(" hello world");
+        assert_eq!(1, result.index);
+        assert_eq!("hello", result.word);
+
+        let result = word(" helloworld");
+        assert_eq!(1, result.index);
+        assert_eq!("helloworld", result.word);
+    }
 
     #[test]
     fn test_words() {

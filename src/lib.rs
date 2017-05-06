@@ -26,7 +26,7 @@
 //! Call the `parse` function on the input.
 
 /*
- * TODO: create a new method instead of using words and find/unwrap.
+ * TODO: zero-copy parsing?
  * TODO: add the attribute #[special_command] in the Command derive macro.
  * TODO: auto-include files.
  * TODO: support set = without spaces around =.
@@ -196,7 +196,7 @@ impl<T: EnumFromStr> Parser<T> {
         if line.len() > index {
             let rest = &line[index..];
             if let Some(word) = maybe_word(rest) {
-                let index = rest.find(word).unwrap(); // NOTE: the line contains the word, hence unwrap.
+                let index = word.index;
                 return Err(Error::Parse(ParseError::new(
                     Parse,
                     rest.to_string(),
@@ -250,8 +250,8 @@ impl<T: EnumFromStr> Parser<T> {
     /// Parse a line.
     fn line(&mut self, line: &str) -> Result<Vec<Command<T>>> {
         if let Some(word) = maybe_word(line) {
-            // NOTE: the word is in the line, hence unwrap.
-            let index = line.find(word).unwrap();
+            let index = word.index;
+            let word = word.word;
             let start_index = index + word.len() + 1;
             self.column = start_index + 1;
 
@@ -293,8 +293,8 @@ impl<T: EnumFromStr> Parser<T> {
     /// Parse an include command.
     fn include_command(&mut self, line: &str) -> Result<Vec<Command<T>>> {
         let word = word(line);
-        // NOTE: the line contains the word, hence unwrap.
-        let index = line.find(word).unwrap();
+        let index = word.index;
+        let word = word.word;
         let after_index = index + word.len() + 1;
         self.column += after_index;
         self.check_eol(line, after_index)?;
@@ -308,10 +308,8 @@ impl<T: EnumFromStr> Parser<T> {
     /// Parse a map command.
     fn map_command(&self, line: &str, mode: &str) -> Result<Command<T>> {
         let word = word(line);
-
-        // NOTE: the line contains the word, hence unwrap.
-        let index = line.find(word).unwrap();
-
+        let index = word.index;
+        let word = word.word;
         let rest = &line[index + word.len() ..].trim();
         if !rest.is_empty() {
             Ok(Map {
@@ -406,10 +404,8 @@ impl<T: EnumFromStr> Parser<T> {
     /// Parse an unmap command.
     fn unmap_command(&mut self, line: &str, mode: &str) -> Result<Command<T>> {
         let word = word(line);
-
-        // NOTE: the line contains the word, hence unwrap.
-        let index = line.find(word).unwrap();
-
+        let index = word.index;
+        let word = word.word;
         let after_index = index + word.len() + 1;
         self.column += after_index;
         self.check_eol(line, after_index)?;
