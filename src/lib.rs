@@ -26,7 +26,6 @@
 //! Call the `parse` function on the input.
 
 /*
- * TODO: add Cargo categories.
  * TODO: create a new method instead of using words and find/unwrap.
  * TODO: add the attribute #[special_command] in the Command derive macro.
  * TODO: auto-include files.
@@ -369,13 +368,12 @@ impl<T: EnumFromStr> Parser<T> {
     /// Parse a set command.
     fn set_command(&mut self, line: &str) -> Result<Command<T>> {
         if let Some(words) = words(line, 2) {
-            // NOTE: the line contains the word, hence unwrap.
-            let index = line.find(words[0]).unwrap();
-            let identifier = check_ident(words[0].to_string(), &Pos::new(self.line, self.column + index))?;
+            let index = words[0].index;
+            let word =  words[0].word;
+            let identifier = check_ident(word.to_string(), &Pos::new(self.line, self.column + index))?;
 
-            let operator = words[1];
-            // NOTE: the operator is in the line, hence unwrap.
-            let operator_index = line.find(operator).unwrap();
+            let operator = words[1].word;
+            let operator_index = words[1].index;
             if operator == "=" {
                 let rest = &line[operator_index + 1..];
                 self.column += operator_index + 1;

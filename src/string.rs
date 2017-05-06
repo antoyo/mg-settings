@@ -71,13 +71,92 @@ pub fn word(input: &str) -> &str {
         .unwrap()
 }
 
-/// Parse a `count` words.
-pub fn words(input: &str, count: usize) -> Option<Vec<&str>> {
-    let vec: Vec<_> = input.split_whitespace().take(count).collect();
+/// A word found by the words function.
+#[derive(Debug, PartialEq)]
+pub struct Word<'a> {
+    pub index: usize,
+    pub word: &'a str,
+}
+
+/// Parse `count` words.
+pub fn words(input: &str, count: usize) -> Option<Vec<Word>> {
+    let mut vec = vec![];
+    let mut start_index = 0;
+    for (i, character) in input.chars().enumerate() {
+        if character.is_whitespace() {
+            let word = &input[start_index..i];
+            if !word.is_empty() {
+                vec.push(Word {
+                    index: start_index,
+                    word,
+                });
+            }
+            start_index = i + 1;
+        }
+    }
+    let len = input.len();
+    if start_index < len {
+        vec.push(Word {
+            index: start_index,
+            word: &input[start_index..len],
+        });
+    }
+
+    vec.truncate(count);
     if vec.len() == count {
         Some(vec)
     }
     else {
         None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Word, words};
+
+    #[test]
+    fn test_words() {
+        let word1 = Word {
+            index: 0,
+            word: "hello",
+        };
+        let word2 = Word {
+            index: 6,
+            word: "world",
+        };
+        assert_eq!(Some(vec![word1, word2]), words("hello world", 2));
+
+        assert_eq!(None, words("hello", 2));
+
+        let word1 = Word {
+            index: 0,
+            word: "hello",
+        };
+        let word2 = Word {
+            index: 6,
+            word: "the",
+        };
+        assert_eq!(Some(vec![word1, word2]), words("hello the world", 2));
+
+        let word1 = Word {
+            index: 1,
+            word: "hello",
+        };
+        let word2 = Word {
+            index: 7,
+            word: "world",
+        };
+        assert_eq!(Some(vec![word1, word2]), words(" hello world ", 2));
+
+        let word1 = Word {
+            index: 1,
+            word: "hello",
+        };
+        let word2 = Word {
+            index: 8,
+            word: "world",
+        };
+        assert_eq!(Some(vec![word1, word2]), words(" hello  world ", 2));
     }
 }
