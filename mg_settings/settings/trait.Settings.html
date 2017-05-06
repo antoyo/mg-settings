@@ -50,14 +50,14 @@
                    </a>
                </span><a class='srclink' href='../../src/mg_settings/settings.rs.html#28-37' title='goto source code'>[src]</a></span></h1>
 <pre class='rust trait'>pub trait Settings {
-    type <a href='#associatedtype.Variant' class="type">Variant</a>;
+    type <a href='#associatedtype.Variant' class="type">Variant</a>: <a class="trait" href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html" title="trait core::clone::Clone">Clone</a>;
     fn <a href='#tymethod.set_value' class='fnname'>set_value</a>(&amp;mut self, value: Self::<a class="trait" href="../../mg_settings/settings/trait.Settings.html" title="trait mg_settings::settings::Settings">Variant</a>);
     fn <a href='#tymethod.to_variant' class='fnname'>to_variant</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name: &amp;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>, <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value: <a class="enum" href="../../mg_settings/enum.Value.html" title="enum mg_settings::Value">Value</a><br>&nbsp;&nbsp;&nbsp;&nbsp;) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Self::<a class="trait" href="../../mg_settings/settings/trait.Settings.html" title="trait mg_settings::settings::Settings">Variant</a>, <a class="enum" href="../../mg_settings/error/enum.SettingError.html" title="enum mg_settings::error::SettingError">SettingError</a>&gt;;
 }</pre><div class='docblock'><p>Settings manager.</p>
 </div>
             <h2 id='associated-types'>Associated Types</h2>
             <div class='methods'>
-        <h3 id='associatedtype.Variant' class='method'><span id='Variant.t' class='invisible'><code>type <a href='#associatedtype.Variant' class="type">Variant</a></code></span></h3><div class='docblock'><p>The variant enum representing the setting setters.</p>
+        <h3 id='associatedtype.Variant' class='method'><span id='Variant.t' class='invisible'><code>type <a href='#associatedtype.Variant' class="type">Variant</a>: <a class="trait" href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html" title="trait core::clone::Clone">Clone</a></code></span></h3><div class='docblock'><p>The variant enum representing the setting setters.</p>
 </div></div>
             <h2 id='required-methods'>Required Methods</h2>
             <div class='methods'>

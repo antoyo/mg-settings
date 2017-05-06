@@ -513,13 +513,6 @@
 <span id="468">468</span>
 <span id="469">469</span>
 <span id="470">470</span>
-<span id="471">471</span>
-<span id="472">472</span>
-<span id="473">473</span>
-<span id="474">474</span>
-<span id="475">475</span>
-<span id="476">476</span>
-<span id="477">477</span>
 </pre><pre class="rust ">
 <span class="comment">/*
  * Copyright (c) 2016 Boucher, Antoni &lt;bouanto@zoho.com&gt;
@@ -549,8 +542,6 @@
 <span class="doccomment">//! Call the `parse` function on the input.</span>
 
 <span class="comment">/*
- * TODO: add Cargo categories.
- * TODO: create a new method instead of using words and find/unwrap.
  * TODO: add the attribute #[special_command] in the Command derive macro.
  * TODO: auto-include files.
  * TODO: support set = without spaces around =.
@@ -720,7 +711,7 @@
         <span class="kw">if</span> <span class="ident">line</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="ident">index</span> {
             <span class="kw">let</span> <span class="ident">rest</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">line</span>[<span class="ident">index</span>..];
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">word</span>) <span class="op">=</span> <span class="ident">maybe_word</span>(<span class="ident">rest</span>) {
-                <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">rest</span>.<span class="ident">find</span>(<span class="ident">word</span>).<span class="ident">unwrap</span>(); <span class="comment">// NOTE: the line contains the word, hence unwrap.</span>
+                <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">word</span>.<span class="ident">index</span>;
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">Parse</span>(<span class="ident">ParseError</span>::<span class="ident">new</span>(
                     <span class="ident">Parse</span>,
                     <span class="ident">rest</span>.<span class="ident">to_string</span>(),
@@ -774,8 +765,8 @@
     <span class="doccomment">/// Parse a line.</span>
     <span class="kw">fn</span> <span class="ident">line</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">line</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Command</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;&gt;</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">word</span>) <span class="op">=</span> <span class="ident">maybe_word</span>(<span class="ident">line</span>) {
-            <span class="comment">// NOTE: the word is in the line, hence unwrap.</span>
-            <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">line</span>.<span class="ident">find</span>(<span class="ident">word</span>).<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">word</span>.<span class="ident">index</span>;
+            <span class="kw">let</span> <span class="ident">word</span> <span class="op">=</span> <span class="ident">word</span>.<span class="ident">word</span>;
             <span class="kw">let</span> <span class="ident">start_index</span> <span class="op">=</span> <span class="ident">index</span> <span class="op">+</span> <span class="ident">word</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="number">1</span>;
             <span class="self">self</span>.<span class="ident">column</span> <span class="op">=</span> <span class="ident">start_index</span> <span class="op">+</span> <span class="number">1</span>;
 
@@ -817,8 +808,8 @@
     <span class="doccomment">/// Parse an include command.</span>
     <span class="kw">fn</span> <span class="ident">include_command</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">line</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Command</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">word</span> <span class="op">=</span> <span class="ident">word</span>(<span class="ident">line</span>);
-        <span class="comment">// NOTE: the line contains the word, hence unwrap.</span>
-        <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">line</span>.<span class="ident">find</span>(<span class="ident">word</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">word</span>.<span class="ident">index</span>;
+        <span class="kw">let</span> <span class="ident">word</span> <span class="op">=</span> <span class="ident">word</span>.<span class="ident">word</span>;
         <span class="kw">let</span> <span class="ident">after_index</span> <span class="op">=</span> <span class="ident">index</span> <span class="op">+</span> <span class="ident">word</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="number">1</span>;
         <span class="self">self</span>.<span class="ident">column</span> <span class="op">+=</span> <span class="ident">after_index</span>;
         <span class="self">self</span>.<span class="ident">check_eol</span>(<span class="ident">line</span>, <span class="ident">after_index</span>)<span class="question-mark">?</span>;
@@ -832,10 +823,8 @@
     <span class="doccomment">/// Parse a map command.</span>
     <span class="kw">fn</span> <span class="ident">map_command</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">line</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">mode</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Command</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;&gt;</span> {
         <span class="kw">let</span> <span class="ident">word</span> <span class="op">=</span> <span class="ident">word</span>(<span class="ident">line</span>);
-
-        <span class="comment">// NOTE: the line contains the word, hence unwrap.</span>
-        <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">line</span>.<span class="ident">find</span>(<span class="ident">word</span>).<span class="ident">unwrap</span>();
-
+        <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">word</span>.<span class="ident">index</span>;
+        <span class="kw">let</span> <span class="ident">word</span> <span class="op">=</span> <span class="ident">word</span>.<span class="ident">word</span>;
         <span class="kw">let</span> <span class="ident">rest</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">line</span>[<span class="ident">index</span> <span class="op">+</span> <span class="ident">word</span>.<span class="ident">len</span>() ..].<span class="ident">trim</span>();
         <span class="kw">if</span> <span class="op">!</span><span class="ident">rest</span>.<span class="ident">is_empty</span>() {
             <span class="prelude-val">Ok</span>(<span class="ident">Map</span> {
@@ -892,13 +881,12 @@
     <span class="doccomment">/// Parse a set command.</span>
     <span class="kw">fn</span> <span class="ident">set_command</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">line</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Command</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;&gt;</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">words</span>) <span class="op">=</span> <span class="ident">words</span>(<span class="ident">line</span>, <span class="number">2</span>) {
-            <span class="comment">// NOTE: the line contains the word, hence unwrap.</span>
-            <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">line</span>.<span class="ident">find</span>(<span class="ident">words</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="ident">identifier</span> <span class="op">=</span> <span class="ident">check_ident</span>(<span class="ident">words</span>[<span class="number">0</span>].<span class="ident">to_string</span>(), <span class="kw-2">&amp;</span><span class="ident">Pos</span>::<span class="ident">new</span>(<span class="self">self</span>.<span class="ident">line</span>, <span class="self">self</span>.<span class="ident">column</span> <span class="op">+</span> <span class="ident">index</span>))<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">words</span>[<span class="number">0</span>].<span class="ident">index</span>;
+            <span class="kw">let</span> <span class="ident">word</span> <span class="op">=</span>  <span class="ident">words</span>[<span class="number">0</span>].<span class="ident">word</span>;
+            <span class="kw">let</span> <span class="ident">identifier</span> <span class="op">=</span> <span class="ident">check_ident</span>(<span class="ident">word</span>.<span class="ident">to_string</span>(), <span class="kw-2">&amp;</span><span class="ident">Pos</span>::<span class="ident">new</span>(<span class="self">self</span>.<span class="ident">line</span>, <span class="self">self</span>.<span class="ident">column</span> <span class="op">+</span> <span class="ident">index</span>))<span class="question-mark">?</span>;
 
-            <span class="kw">let</span> <span class="ident">operator</span> <span class="op">=</span> <span class="ident">words</span>[<span class="number">1</span>];
-            <span class="comment">// NOTE: the operator is in the line, hence unwrap.</span>
-            <span class="kw">let</span> <span class="ident">operator_index</span> <span class="op">=</span> <span class="ident">line</span>.<span class="ident">find</span>(<span class="ident">operator</span>).<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">operator</span> <span class="op">=</span> <span class="ident">words</span>[<span class="number">1</span>].<span class="ident">word</span>;
+            <span class="kw">let</span> <span class="ident">operator_index</span> <span class="op">=</span> <span class="ident">words</span>[<span class="number">1</span>].<span class="ident">index</span>;
             <span class="kw">if</span> <span class="ident">operator</span> <span class="op">==</span> <span class="string">&quot;=&quot;</span> {
                 <span class="kw">let</span> <span class="ident">rest</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">line</span>[<span class="ident">operator_index</span> <span class="op">+</span> <span class="number">1</span>..];
                 <span class="self">self</span>.<span class="ident">column</span> <span class="op">+=</span> <span class="ident">operator_index</span> <span class="op">+</span> <span class="number">1</span>;
@@ -931,10 +919,8 @@
     <span class="doccomment">/// Parse an unmap command.</span>
     <span class="kw">fn</span> <span class="ident">unmap_command</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">line</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">mode</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Command</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;&gt;</span> {
         <span class="kw">let</span> <span class="ident">word</span> <span class="op">=</span> <span class="ident">word</span>(<span class="ident">line</span>);
-
-        <span class="comment">// NOTE: the line contains the word, hence unwrap.</span>
-        <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">line</span>.<span class="ident">find</span>(<span class="ident">word</span>).<span class="ident">unwrap</span>();
-
+        <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">word</span>.<span class="ident">index</span>;
+        <span class="kw">let</span> <span class="ident">word</span> <span class="op">=</span> <span class="ident">word</span>.<span class="ident">word</span>;
         <span class="kw">let</span> <span class="ident">after_index</span> <span class="op">=</span> <span class="ident">index</span> <span class="op">+</span> <span class="ident">word</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="number">1</span>;
         <span class="self">self</span>.<span class="ident">column</span> <span class="op">+=</span> <span class="ident">after_index</span>;
         <span class="self">self</span>.<span class="ident">check_eol</span>(<span class="ident">line</span>, <span class="ident">after_index</span>)<span class="question-mark">?</span>;
