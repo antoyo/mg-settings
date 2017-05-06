@@ -3,7 +3,7 @@ name = "mg-settings-macros"
 description = "Help custom derive for mg-settings"
 license = "MIT"
 repository = "https://github.com/antoyo/mg-settings"
-version = "0.0.3"
+version = "0.1.0"
 authors = ["Antoni Boucher <bouanto@zoho.com>"]
 
 [lib]
