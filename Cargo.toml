@@ -1,6 +1,6 @@
 [package]
 name = "mg-settings"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Antoni Boucher <bouanto@zoho.com>"]
 categories = ["config"]
 description = "Parse config files."
