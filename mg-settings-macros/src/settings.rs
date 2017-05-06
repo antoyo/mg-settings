@@ -151,6 +151,7 @@ fn to_enums(variant_name: &Ident, settings_struct: &Body) -> Tokens {
         }
         let names1 = &names;
         quote! {
+            #[derive(Clone)]
             pub enum #variant_name {
                 #(#names1(#types)),*
             }

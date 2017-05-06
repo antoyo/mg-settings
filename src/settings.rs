@@ -27,7 +27,7 @@ use super::Value;
 /// Settings manager.
 pub trait Settings {
     /// The variant enum representing the setting setters.
-    type Variant;
+    type Variant: Clone;
 
     /// Set a setting value from its variant.
     fn set_value(&mut self, value: Self::Variant);

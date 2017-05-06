@@ -26,7 +26,6 @@
 //! Call the `parse` function on the input.
 
 /*
- * TODO: zero-copy parsing?
  * TODO: add the attribute #[special_command] in the Command derive macro.
  * TODO: auto-include files.
  * TODO: support set = without spaces around =.
