@@ -153,7 +153,7 @@ pub enum Command<T> {
 #[derive(Default)]
 pub struct Config {
     /// The application library commands.
-    pub application_commands: Vec<String>,
+    pub application_commands: Vec<&'static str>,
     /// The available mapping modes for the map command.
     pub mapping_modes: Vec<&'static str>,
 }
@@ -222,7 +222,7 @@ impl<T: EnumFromStr> Parser<T> {
         if let Ok(command) = T::create(word, args) {
             Ok(Custom(command))
         }
-        else if self.config.application_commands.contains(&word.to_string()) {
+        else if self.config.application_commands.contains(&word) {
             Ok(App(word.to_string()))
         }
         else {

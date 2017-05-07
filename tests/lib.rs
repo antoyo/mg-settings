@@ -229,7 +229,7 @@ fn parse_string_no_include_path(input: &str) -> Vec<Command<CustomCommand>> {
 
 fn parse_string_with_config(input: &str) -> Vec<Command<CustomCommand>> {
     let mut parser = CommandParser::new_with_config(Config {
-        application_commands: vec!["complete-next".to_string()],
+        application_commands: vec!["complete-next"],
         mapping_modes: vec!["n", "i", "c"],
     });
     parser.parse(input.as_bytes()).unwrap()
