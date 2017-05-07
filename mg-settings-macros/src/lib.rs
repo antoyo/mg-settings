@@ -34,7 +34,7 @@ use proc_macro::TokenStream;
 use commands::expand_commands_enum;
 use settings::{expand_setting_enum, expand_settings_enum};
 
-#[proc_macro_derive(Commands, attributes(completion, help))]
+#[proc_macro_derive(Commands, attributes(completion, help, special_command))]
 /// Derive Commands.
 pub fn commands(input: TokenStream) -> TokenStream {
     let source = input.to_string();

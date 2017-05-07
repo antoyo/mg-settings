@@ -20,90 +20,153 @@
  */
 
 use quote::Tokens;
-use syn::{Attribute, Body, Ident};
+use syn::{Attribute, Body, Field, Ident, Variant};
 use syn::Body::{Enum, Struct};
 use syn::Lit::Str;
 use syn::MetaItem::{List, NameValue, Word};
 use syn::NestedMetaItem::MetaItem;
 use syn::VariantData::{self, Unit};
 
+use self::VariantInfo::{CommandInfo, SpecialCommandInfo};
 use string::to_dash_name;
 
-macro_rules! push_data {
-    (true, $has_argument:expr, $item_names:expr, $item:expr) => {
-        $has_argument.push($item.data != Unit);
-        $item_names.push($item.ident.to_string());
-    };
-    (false, $has_argument:expr, $item_names:expr, $item:expr) => {
-        $item_names.push($item.ident.as_ref().unwrap().to_string());
-    };
-}
-
-macro_rules! collect_and_transform {
-    ($item:expr, $is_variant:tt, $has_argument:expr, $item_names:expr, $descriptions:expr, $hidden_items:expr) => {
-        push_data!($is_variant, $has_argument, $item_names, $item);
-        let mut help = String::new();
-        let mut hidden = false;
-        if !$item.attrs.is_empty() {
-            for attribute in &$item.attrs {
-                if let &Attribute { value: List(ref ident, ref args), .. } = attribute {
-                    match ident.as_ref() {
-                        "completion" => {
-                            if let MetaItem(Word(ref arg_ident)) = args[0] {
-                                if arg_ident == "hidden" {
-                                    hidden = true;
-                                }
-                            }
-                        },
-                        "help" => {
-                            if let MetaItem(NameValue(ref arg_ident, ref value)) = args[0] {
-                                if arg_ident == "text" {
-                                    if let &Str(ref description, _) = value {
-                                        help = description.clone();
-                                    }
-                                }
-                            }
-                        },
-                        _ => (),
+fn collect_attrs(name: &str, attrs: &[Attribute], hidden: &mut bool, description: &mut String) -> Option<VariantInfo> {
+    for attribute in attrs {
+        if let &Attribute { value: List(ref ident, ref args), .. } = attribute {
+            match ident.as_ref() {
+                "completion" => {
+                    if let MetaItem(Word(ref arg_ident)) = args[0] {
+                        if arg_ident == "hidden" {
+                            *hidden = true;
+                        }
                     }
-                }
+                },
+                "help" => {
+                    if let MetaItem(NameValue(ref arg_ident, ref value)) = args[0] {
+                        if arg_ident == "text" {
+                            if let Str(ref desc, _) = *value {
+                                *description = desc.clone();
+                            }
+                        }
+                    }
+                },
+                "special_command" => {
+                    let mut incremental = false;
+                    let mut identifier = None;
+                    for arg in args {
+                        if let MetaItem(ref meta_item) = *arg {
+                            match *meta_item {
+                                Word(ref ident) => {
+                                    if ident == "incremental" {
+                                        incremental = true;
+                                    }
+                                },
+                                NameValue(ref ident, ref value) => {
+                                    if ident == "identifier" {
+                                        if let Str(ref string, _) = *value {
+                                            identifier = Some(string.chars().next()
+                                                .expect("identifier should be one character"));
+                                        }
+                                    }
+                                },
+                                _ => panic!("Unexpected `{:?}`, expecting `incremental`, or `identifier=\"c\"`", meta_item),
+                            }
+                        }
+                    }
+                    return Some(SpecialCommandInfo(SpecialCommand {
+                        identifier: identifier.expect("identifier is required in #[special_command] attribute"),
+                        incremental,
+                        name: name.to_string(),
+                    }));
+                },
+                _ => (),
             }
         }
-        $descriptions.push(help);
-        $hidden_items.push(hidden);
-    };
+    }
+    None
+}
+
+fn collect_and_transform_variant(variant: &Variant) -> VariantInfo {
+    let mut command = Command::new();
+    command.has_argument = variant.data != Unit;
+    command.name = variant.ident.to_string();
+    if let Some(special_command) = collect_attrs(&command.name, &variant.attrs, &mut command.hidden,
+                                                 &mut command.description)
+    {
+        special_command
+    }
+    else {
+        CommandInfo(command)
+    }
+}
+
+fn collect_and_transform_field(field: &Field) -> VariantInfo {
+    let mut command = Command::new();
+    command.name = field.ident.as_ref().unwrap().to_string();
+    if let Some(special_command) = collect_attrs(&command.name, &field.attrs, &mut command.hidden,
+                                                 &mut command.description)
+    {
+        special_command
+    }
+    else {
+        CommandInfo(command)
+    }
+}
+
+#[derive(Debug)]
+pub struct Command {
+    pub description: String,
+    pub has_argument: bool,
+    pub hidden: bool,
+    pub name: String,
+}
+
+impl Command {
+    fn new() -> Self {
+        Command {
+            description: String::new(),
+            has_argument: false,
+            hidden: false,
+            name: String::new(),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct SpecialCommand {
+    pub identifier: char,
+    pub incremental: bool,
+    pub name: String,
 }
 
 /// Struct holding metadata information about all the variants.
 #[derive(Debug)]
-pub struct VariantInfo {
-    pub descriptions: Vec<String>,
-    pub has_argument: Vec<bool>,
-    pub hidden: Vec<bool>,
-    pub names: Vec<String>,
+pub enum VariantInfo {
+    CommandInfo(Command),
+    SpecialCommandInfo(SpecialCommand),
 }
 
 /// Create the EnumMetaData impl.
-pub fn to_metadata_impl(name: &Ident, body: &Body) -> (Tokens, VariantInfo) {
-    let variant_info = transform_enum(body);
-    let variant_names: Vec<_> = variant_info.names.iter()
-        .map(|name| to_dash_name(&name))
-        .collect();
+pub fn to_metadata_impl(name: &Ident, body: &Body) -> (Tokens, Vec<VariantInfo>) {
+    let variant_infos = transform_enum(body);
     let tokens = {
-        let metadata =
-            variant_names.iter()
-                .zip(&variant_info.hidden)
-                .zip(&variant_info.descriptions)
-                .map(|((name, &is_hidden), description)| {
-                    let name = to_dash_name(name).replace('_', "-");
-                    quote! {
-                        (#name.to_string(), ::mg_settings::MetaData {
-                            completion_hidden: #is_hidden,
-                            help_text: #description.to_string(),
-                            is_special_command: false,
-                        })
-                    }
-                });
+        let metadata = variant_infos.iter()
+            .filter_map(|info| if let CommandInfo(ref command) = *info {
+                let name = to_dash_name(&command.name).replace('_', "-");
+                let is_hidden = &command.hidden;
+                let description = &command.description;
+                let metadata = quote! {
+                    (#name.to_string(), ::mg_settings::MetaData {
+                        completion_hidden: #is_hidden,
+                        help_text: #description.to_string(),
+                        is_special_command: false,
+                    })
+                };
+                Some(metadata)
+            }
+            else {
+                None
+            });
         quote! {
             impl ::mg_settings::EnumMetaData for #name {
                 fn get_metadata() -> ::std::collections::HashMap<String, ::mg_settings::MetaData> {
@@ -114,32 +177,24 @@ pub fn to_metadata_impl(name: &Ident, body: &Body) -> (Tokens, VariantInfo) {
             }
         }
     };
-    (tokens, variant_info)
+    (tokens, variant_infos)
 }
 
 /// Remove the attributes from the variants and return the metadata gathered from the attributes.
-pub fn transform_enum(item: &Body) -> VariantInfo {
-    let mut descriptions = vec![];
-    let mut has_argument = vec![];
-    let mut hidden_items = vec![];
-    let mut item_names = vec![];
+pub fn transform_enum(item: &Body) -> Vec<VariantInfo> {
+    let mut variant_infos = vec![];
     match *item {
         Enum(ref variants) => {
             for variant in variants {
-                collect_and_transform!(variant, true, has_argument, item_names, descriptions, hidden_items);
+                variant_infos.push(collect_and_transform_variant(variant));
             }
         },
         Struct(VariantData::Struct(ref fields)) => {
             for field in fields {
-                collect_and_transform!(field, false, has_argument, item_names, descriptions, hidden_items);
+                variant_infos.push(collect_and_transform_field(field));
             }
         },
         _ => (),
     }
-    VariantInfo {
-        descriptions: descriptions,
-        has_argument: has_argument,
-        hidden: hidden_items,
-        names: item_names,
-    }
+    variant_infos
 }

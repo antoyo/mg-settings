@@ -444,6 +444,22 @@ impl<T: EnumFromStr> Parser<T> {
     }
 }
 
+/// Trait for converting an identifier like "/" to a special command.
+pub trait SpecialCommand
+    where Self: Sized
+{
+    /// Convert an identifier like "/" to a special command.
+    fn identifier_to_command(identifier: char, input: &str) -> std::result::Result<Self, String>;
+
+    /// Check if a character is a special command identifier.
+    fn is_identifier(character: char) -> bool;
+
+    /// Check if the identifier is declared `always`.
+    /// The always option means that the command is activated every time a character is typed (like
+    /// incremental search).
+    fn is_incremental(identifier: char) -> bool;
+}
+
 /// The `Value` enum represents a value along with its type.
 #[derive(Debug, PartialEq)]
 pub enum Value {

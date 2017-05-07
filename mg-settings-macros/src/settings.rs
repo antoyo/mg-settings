@@ -254,7 +254,7 @@ fn to_settings_impl(name: &Ident, variant_name: &Ident, settings_struct: &Body) 
     }
 }
 
-/// Create the function returing the completion of the setting values.
+/// Create the function returning the completion of the setting values.
 pub fn to_setting_completion_fn(name: &Ident, body: &Body) -> Tokens {
     let mut completions = vec![];
     if let Struct(VariantData::Struct(ref fields)) = *body {
