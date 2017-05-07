@@ -31,6 +31,7 @@ use self::Key::*;
 
 /// Structure to represent which keys were pressed.
 struct ConstructorKeys {
+    alt: bool,
     control: bool,
     shift: bool,
 }
@@ -38,6 +39,7 @@ struct ConstructorKeys {
 impl ConstructorKeys {
     fn new() -> Self {
         ConstructorKeys {
+            alt: false,
             control: false,
             shift: false,
         }
@@ -47,6 +49,8 @@ impl ConstructorKeys {
 /// Enum representing the keys that can be used in a mapping.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Key {
+    /// Alt + another key.
+    Alt(Box<Key>),
     /// Backspace key.
     Backspace,
     /// A single-character key.
@@ -102,6 +106,7 @@ pub enum Key {
 fn key_to_string(key: &Key) -> String {
     let string =
         match *key {
+            Alt(ref key) => return format!("A-{}", key_to_string(&*key)),
             Backspace => "Backspace",
             Char(character) => return character.to_string(),
             Control(ref key) => return format!("C-{}", key_to_string(&*key)),
@@ -144,6 +149,34 @@ impl Display for Key {
     }
 }
 
+fn key_constructor(key: Key, constructor_keys: &ConstructorKeys) -> Key {
+    if constructor_keys.control {
+        if constructor_keys.shift {
+            if constructor_keys.alt {
+                Control(Box::new(Alt(Box::new(Shift(Box::new(key))))))
+            }
+            else {
+                Control(Box::new(Shift(Box::new(key))))
+            }
+        }
+        else if constructor_keys.alt {
+            Control(Box::new(Alt(Box::new(key))))
+        }
+        else {
+            Control(Box::new(key))
+        }
+    }
+    else if constructor_keys.shift {
+        Shift(Box::new(key))
+    }
+    else if constructor_keys.alt {
+        Alt(Box::new(key))
+    }
+    else {
+        key
+    }
+}
+
 fn parse_key(input: &str, line_num: usize, column_num: usize) -> Result<(Key, usize)> {
     let mut chars = input.chars();
     let result =
@@ -160,13 +193,14 @@ fn parse_key(input: &str, line_num: usize, column_num: usize) -> Result<(Key, us
 
                 }
                 let mut end = key.clone();
-                if end.len() >= 2 && (&end[..2] == "C-" || &end[..2] == "S-") {
+                if end.len() >= 2 && (&end[..2] == "A-" || &end[..2] == "C-" || &end[..2] == "S-") {
                     let mut delta = 0;
                     let mut constructor_keys = ConstructorKeys::new();
-                    while end.len() >= 2 && (&end[..2] == "C-" || &end[..2] == "S-") {
+                    while end.len() >= 2 && (&end[..2] == "A-" || &end[..2] == "C-" || &end[..2] == "S-") {
                         let new_end = {
                             let (start, new_end) = end.split_at(2);
                             match start {
+                                "A-" => constructor_keys.alt = true,
                                 "C-" => constructor_keys.control = true,
                                 "S-" => constructor_keys.shift = true,
                                 _ => unreachable!(),
@@ -177,33 +211,16 @@ fn parse_key(input: &str, line_num: usize, column_num: usize) -> Result<(Key, us
                         end = new_end;
                     }
 
-                    let constructor = |key: Key| {
-                        if constructor_keys.control {
-                            if constructor_keys.shift {
-                                Control(Box::new(Shift(Box::new(key))))
-                            }
-                            else {
-                                Control(Box::new(key))
-                            }
-                        }
-                        else if constructor_keys.shift {
-                            Shift(Box::new(key))
-                        }
-                        else {
-                            key
-                        }
-                    };
-
                     let character = end.chars().next().unwrap(); // NOTE: There is at least one character, hence unwrap.
                     let result_special_key = special_key(&end, line_num, column_num + delta, true)
-                        .map(|(key, size)| (constructor(key), size + delta));
+                        .map(|(key, size)| (key_constructor(key, &constructor_keys), size + delta));
                     match result_special_key {
                         Ok(result) => result,
                         Err(error) => {
                             match character {
                                 'A' ... 'Z' | 'a' ... 'z' => {
                                     if end.len() == 1 {
-                                        (constructor(Char(character)), 5)
+                                        (key_constructor(Char(character), &constructor_keys), 5)
                                     }
                                     else {
                                         return Err(Error::Parse(ParseError::new(

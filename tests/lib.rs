@@ -26,6 +26,7 @@ extern crate mg_settings_macros;
 use mg_settings::{Config, EnumFromStr, Parser};
 use mg_settings::Command::{self, App, Custom, Map, Set, Unmap};
 use mg_settings::key::Key::{
+    Alt,
     Backspace,
     Char,
     Control,
@@ -147,40 +148,82 @@ fn include_command() {
 
 #[test]
 fn map_command() {
-    assert_eq!(parse_string_with_config("nmap o :open"), vec![Map { action: ":open".to_string(), keys: vec![Char('o')], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <Backspace> :help"), vec![Map { action: ":help".to_string(), keys: vec![Backspace], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <F1> :help"), vec![Map { action: ":help".to_string(), keys: vec![F1], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <F2> :help"), vec![Map { action: ":help".to_string(), keys: vec![F2], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <F3> :help"), vec![Map { action: ":help".to_string(), keys: vec![F3], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <F4> :help"), vec![Map { action: ":help".to_string(), keys: vec![F4], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <F5> :help"), vec![Map { action: ":help".to_string(), keys: vec![F5], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <F6> :help"), vec![Map { action: ":help".to_string(), keys: vec![F6], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <F7> :help"), vec![Map { action: ":help".to_string(), keys: vec![F7], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <F8> :help"), vec![Map { action: ":help".to_string(), keys: vec![F8], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <F9> :help"), vec![Map { action: ":help".to_string(), keys: vec![F9], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <F10> :help"), vec![Map { action: ":help".to_string(), keys: vec![F10], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <F11> :help"), vec![Map { action: ":help".to_string(), keys: vec![F11], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <F12> :help"), vec![Map { action: ":help".to_string(), keys: vec![F12], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <Down> :help"), vec![Map { action: ":help".to_string(), keys: vec![Down], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <Enter> :help"), vec![Map { action: ":help".to_string(), keys: vec![Enter], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <Esc> :help"), vec![Map { action: ":help".to_string(), keys: vec![Escape], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <Left> :help"), vec![Map { action: ":help".to_string(), keys: vec![Left], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap - :help"), vec![Map { action: ":help".to_string(), keys: vec![Char('-')], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap + :help"), vec![Map { action: ":help".to_string(), keys: vec![Char('+')], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <Right> :help"), vec![Map { action: ":help".to_string(), keys: vec![Right], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <Space> :help"), vec![Map { action: ":help".to_string(), keys: vec![Space], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <Tab> :help"), vec![Map { action: ":help".to_string(), keys: vec![Tab], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <Up> :help"), vec![Map { action: ":help".to_string(), keys: vec![Up], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <C-A> :help"), vec![Map { action: ":help".to_string(), keys: vec![Control(Box::new(Char('A')))], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <C-Z> :help"), vec![Map { action: ":help".to_string(), keys: vec![Control(Box::new(Char('Z')))], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <C-o> :help"), vec![Map { action: ":help".to_string(), keys: vec![Control(Box::new(Char('o')))], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <S-A> :help"), vec![Map { action: ":help".to_string(), keys: vec![Shift(Box::new(Char('A')))], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap Oo :open"), vec![Map { action: ":open".to_string(), keys: vec![Char('O'), Char('o')], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <C-O>o :open"), vec![Map { action: ":open".to_string(), keys: vec![Control(Box::new(Char('O'))), Char('o')], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <C-Tab> :help"), vec![Map { action: ":help".to_string(), keys: vec![Control(Box::new(Tab))], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <S-Tab> :help"), vec![Map { action: ":help".to_string(), keys: vec![Shift(Box::new(Tab))], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <C-S-Tab> :help"), vec![Map { action: ":help".to_string(), keys: vec![Control(Box::new(Shift(Box::new(Tab))))], mode: "n".to_string() }]);
-    assert_eq!(parse_string_with_config("nmap <S-C-Tab> :help"), vec![Map { action: ":help".to_string(), keys: vec![Control(Box::new(Shift(Box::new(Tab))))], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap o :open"),
+        vec![Map { action: ":open".to_string(), keys: vec![Char('o')], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <Backspace> :help"),
+        vec![Map { action: ":help".to_string(), keys: vec![Backspace], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <F1> :help"),
+        vec![Map { action: ":help".to_string(), keys: vec![F1], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <F2> :help"),
+        vec![Map { action: ":help".to_string(), keys: vec![F2], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <F3> :help"),
+        vec![Map { action: ":help".to_string(), keys: vec![F3], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <F4> :help"),
+        vec![Map { action: ":help".to_string(), keys: vec![F4], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <F5> :help"),
+        vec![Map { action: ":help".to_string(), keys: vec![F5], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <F6> :help"),
+        vec![Map { action: ":help".to_string(), keys: vec![F6], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <F7> :help"),
+        vec![Map { action: ":help".to_string(), keys: vec![F7], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <F8> :help"),
+        vec![Map { action: ":help".to_string(), keys: vec![F8], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <F9> :help"),
+        vec![Map { action: ":help".to_string(), keys: vec![F9], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <F10> :help"),
+        vec![Map { action: ":help".to_string(), keys: vec![F10], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <F11> :help"),
+        vec![Map { action: ":help".to_string(), keys: vec![F11], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <F12> :help"),
+        vec![Map { action: ":help".to_string(), keys: vec![F12], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <Down> :help"),
+        vec![Map { action: ":help".to_string(), keys: vec![Down], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <Enter> :help"),
+        vec![Map { action: ":help".to_string(), keys: vec![Enter], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <Esc> :help"),
+        vec![Map { action: ":help".to_string(), keys: vec![Escape], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <Left> :help"),
+        vec![Map { action: ":help".to_string(), keys: vec![Left], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap - :help"),
+        vec![Map { action: ":help".to_string(), keys: vec![Char('-')], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap + :help"),
+        vec![Map { action: ":help".to_string(), keys: vec![Char('+')], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <Right> :help"),
+        vec![Map { action: ":help".to_string(), keys: vec![Right], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <Space> :help"),
+        vec![Map { action: ":help".to_string(), keys: vec![Space], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <Tab> :help"),
+        vec![Map { action: ":help".to_string(), keys: vec![Tab], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <Up> :help"),
+        vec![Map { action: ":help".to_string(), keys: vec![Up], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <C-A> :help"),
+        vec![Map { action: ":help".to_string(), keys: vec![Control(Box::new(Char('A')))], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <C-Z> :help"),
+        vec![Map { action: ":help".to_string(), keys: vec![Control(Box::new(Char('Z')))], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <C-o> :help"),
+        vec![Map { action: ":help".to_string(), keys: vec![Control(Box::new(Char('o')))], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <A-o> :help"),
+        vec![Map { action: ":help".to_string(), keys: vec![Alt(Box::new(Char('o')))], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <S-A> :help"),
+        vec![Map { action: ":help".to_string(), keys: vec![Shift(Box::new(Char('A')))], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap Oo :open"),
+        vec![Map { action: ":open".to_string(), keys: vec![Char('O'), Char('o')], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <C-O>o :open"),
+        vec![Map { action: ":open".to_string(),
+            keys: vec![Control(Box::new(Char('O'))), Char('o')], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <C-Tab> :help"),
+        vec![Map { action: ":help".to_string(), keys: vec![Control(Box::new(Tab))], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <S-Tab> :help"),
+        vec![Map { action: ":help".to_string(), keys: vec![Shift(Box::new(Tab))], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <C-S-Tab> :help"),
+        vec![Map { action: ":help".to_string(),
+            keys: vec![Control(Box::new(Shift(Box::new(Tab))))], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <C-A-S-Tab> :help"),
+        vec![Map { action: ":help".to_string(),
+            keys: vec![Control(Box::new(Alt(Box::new(Shift(Box::new(Tab))))))], mode: "n".to_string() }]);
+    assert_eq!(parse_string_with_config("nmap <S-C-Tab> :help"),
+        vec![Map { action: ":help".to_string(),
+            keys: vec![Control(Box::new(Shift(Box::new(Tab))))], mode: "n".to_string() }]);
 }
 
 #[test]
