@@ -20,11 +20,13 @@
  */
 
 use quote::Tokens;
+use syn;
 use syn::{Attribute, Body, Field, Ident, Variant};
 use syn::Body::{Enum, Struct};
 use syn::Lit::Str;
 use syn::MetaItem::{List, NameValue, Word};
 use syn::NestedMetaItem::MetaItem;
+use syn::Ty::Path;
 use syn::VariantData::{self, Unit};
 
 use self::VariantInfo::{CommandInfo, SpecialCommandInfo};
@@ -100,6 +102,11 @@ fn collect_and_transform_variant(variant: &Variant) -> VariantInfo {
     let mut command = Command::new();
     command.has_argument = variant.data != Unit;
     command.name = variant.ident.to_string();
+    if let VariantData::Tuple(ref fields) = variant.data {
+        if let Path(_, syn::Path { ref segments, .. }) = fields[0].ty {
+            command.is_optional = segments[0].ident == "Option";
+        }
+    }
     if let Some(special_command) = collect_attrs(&command.name, &variant.attrs, &mut command.hidden,
                                                  &mut command.description, &mut command.is_count)
     {
@@ -125,20 +132,22 @@ fn collect_and_transform_field(field: &Field) -> VariantInfo {
 
 #[derive(Debug)]
 pub struct Command {
-    pub is_count: bool,
     pub description: String,
     pub has_argument: bool,
     pub hidden: bool,
+    pub is_count: bool,
+    pub is_optional: bool,
     pub name: String,
 }
 
 impl Command {
     fn new() -> Self {
         Command {
-            is_count: false,
             description: String::new(),
             has_argument: false,
             hidden: false,
+            is_count: false,
+            is_optional: false,
             name: String::new(),
         }
     }

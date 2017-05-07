@@ -55,6 +55,11 @@ pub fn expand_commands_enum(mut ast: MacroInput) -> Tokens {
                             #name::#ident(#arg_ident.parse().expect("count should be a number"))
                         }
                     }
+                    else if command.is_optional {
+                        quote! {
+                            #name::#ident(Some(#arg_ident.to_string()))
+                        }
+                    }
                     else {
                         quote! {
                             #name::#ident(#arg_ident.to_string())
