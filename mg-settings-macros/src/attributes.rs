@@ -30,57 +30,67 @@ use syn::VariantData::{self, Unit};
 use self::VariantInfo::{CommandInfo, SpecialCommandInfo};
 use string::to_dash_name;
 
-fn collect_attrs(name: &str, attrs: &[Attribute], hidden: &mut bool, description: &mut String) -> Option<VariantInfo> {
+fn collect_attrs(name: &str, attrs: &[Attribute], hidden: &mut bool, description: &mut String, is_count: &mut bool)
+    -> Option<VariantInfo>
+{
     for attribute in attrs {
-        if let &Attribute { value: List(ref ident, ref args), .. } = attribute {
-            match ident.as_ref() {
-                "completion" => {
-                    if let MetaItem(Word(ref arg_ident)) = args[0] {
-                        if arg_ident == "hidden" {
-                            *hidden = true;
-                        }
-                    }
-                },
-                "help" => {
-                    if let MetaItem(NameValue(ref arg_ident, ref value)) = args[0] {
-                        if arg_ident == "text" {
-                            if let Str(ref desc, _) = *value {
-                                *description = desc.clone();
+        match *attribute {
+            Attribute { value: List(ref ident, ref args), .. } => {
+                match ident.as_ref() {
+                    "completion" => {
+                        if let MetaItem(Word(ref arg_ident)) = args[0] {
+                            if arg_ident == "hidden" {
+                                *hidden = true;
                             }
                         }
-                    }
-                },
-                "special_command" => {
-                    let mut incremental = false;
-                    let mut identifier = None;
-                    for arg in args {
-                        if let MetaItem(ref meta_item) = *arg {
-                            match *meta_item {
-                                Word(ref ident) => {
-                                    if ident == "incremental" {
-                                        incremental = true;
-                                    }
-                                },
-                                NameValue(ref ident, ref value) => {
-                                    if ident == "identifier" {
-                                        if let Str(ref string, _) = *value {
-                                            identifier = Some(string.chars().next()
-                                                .expect("identifier should be one character"));
+                    },
+                    "help" => {
+                        if let MetaItem(NameValue(ref arg_ident, ref value)) = args[0] {
+                            if arg_ident == "text" {
+                                if let Str(ref desc, _) = *value {
+                                    *description = desc.clone();
+                                }
+                            }
+                        }
+                    },
+                    "special_command" => {
+                        let mut incremental = false;
+                        let mut identifier = None;
+                        for arg in args {
+                            if let MetaItem(ref meta_item) = *arg {
+                                match *meta_item {
+                                    Word(ref ident) => {
+                                        if ident == "incremental" {
+                                            incremental = true;
                                         }
-                                    }
-                                },
-                                _ => panic!("Unexpected `{:?}`, expecting `incremental`, or `identifier=\"c\"`", meta_item),
+                                    },
+                                    NameValue(ref ident, ref value) => {
+                                        if ident == "identifier" {
+                                            if let Str(ref string, _) = *value {
+                                                identifier = Some(string.chars().next()
+                                                                  .expect("identifier should be one character"));
+                                            }
+                                        }
+                                    },
+                                    _ => panic!("Unexpected `{:?}`, expecting `incremental`, or `identifier=\"c\"`", meta_item),
+                                }
                             }
                         }
-                    }
-                    return Some(SpecialCommandInfo(SpecialCommand {
-                        identifier: identifier.expect("identifier is required in #[special_command] attribute"),
-                        incremental,
-                        name: name.to_string(),
-                    }));
-                },
-                _ => (),
-            }
+                        return Some(SpecialCommandInfo(SpecialCommand {
+                            identifier: identifier.expect("identifier is required in #[special_command] attribute"),
+                            incremental,
+                            name: name.to_string(),
+                        }));
+                    },
+                    _ => (),
+                }
+            },
+            Attribute { value: Word(ref ident), .. } => {
+                if ident == "count" {
+                    *is_count = true;
+                }
+            },
+            _ => (),
         }
     }
     None
@@ -91,7 +101,7 @@ fn collect_and_transform_variant(variant: &Variant) -> VariantInfo {
     command.has_argument = variant.data != Unit;
     command.name = variant.ident.to_string();
     if let Some(special_command) = collect_attrs(&command.name, &variant.attrs, &mut command.hidden,
-                                                 &mut command.description)
+                                                 &mut command.description, &mut command.is_count)
     {
         special_command
     }
@@ -104,7 +114,7 @@ fn collect_and_transform_field(field: &Field) -> VariantInfo {
     let mut command = Command::new();
     command.name = field.ident.as_ref().unwrap().to_string();
     if let Some(special_command) = collect_attrs(&command.name, &field.attrs, &mut command.hidden,
-                                                 &mut command.description)
+                                                 &mut command.description, &mut command.is_count)
     {
         special_command
     }
@@ -115,6 +125,7 @@ fn collect_and_transform_field(field: &Field) -> VariantInfo {
 
 #[derive(Debug)]
 pub struct Command {
+    pub is_count: bool,
     pub description: String,
     pub has_argument: bool,
     pub hidden: bool,
@@ -124,6 +135,7 @@ pub struct Command {
 impl Command {
     fn new() -> Self {
         Command {
+            is_count: false,
             description: String::new(),
             has_argument: false,
             hidden: false,
@@ -153,7 +165,7 @@ pub fn to_metadata_impl(name: &Ident, body: &Body) -> (Tokens, Vec<VariantInfo>)
         let metadata = variant_infos.iter()
             .filter_map(|info| if let CommandInfo(ref command) = *info {
                 let name = to_dash_name(&command.name).replace('_', "-");
-                let is_hidden = &command.hidden;
+                let is_hidden = command.hidden || command.is_count;
                 let description = &command.description;
                 let metadata = quote! {
                     (#name.to_string(), ::mg_settings::MetaData {

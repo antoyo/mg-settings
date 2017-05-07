@@ -50,8 +50,15 @@ pub fn expand_commands_enum(mut ast: MacroInput) -> Tokens {
             let arg_ident = Ident::new("argument");
             let value =
                 if command.has_argument {
-                    quote! {
-                        #name::#ident(#arg_ident.to_string())
+                    if command.is_count {
+                        quote! {
+                            #name::#ident(#arg_ident.parse().expect("count should be a number"))
+                        }
+                    }
+                    else {
+                        quote! {
+                            #name::#ident(#arg_ident.to_string())
+                        }
                     }
                 }
                 else {
