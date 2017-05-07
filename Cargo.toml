@@ -11,11 +11,6 @@ documentation = "https://antoyo.github.io/mg-settings/mg_settings/"
 [features]
 nightly = []
 
-[dependencies]
-
 [dependencies.mg-settings-macros]
 path = "mg-settings-macros"
 version = "^0.1.0"
-
-[package.metadata.release]
-upload-doc = true

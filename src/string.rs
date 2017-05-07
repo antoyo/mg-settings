@@ -81,7 +81,7 @@ pub fn word(input: &str) -> Word {
     let start = input.chars().take_while(|c| c.is_whitespace()).count();
     let end = input[start..].find(char::is_whitespace)
         .map(|index| index + start)
-        .unwrap_or(input.len());
+        .unwrap_or_else(|| input.len());
     Word {
         index: start,
         word: &input[start..end],
