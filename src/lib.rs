@@ -58,6 +58,24 @@ use string::{StrExt, check_ident, maybe_word, word, words};
 use Command::*;
 use Value::*;
 
+macro_rules! rtry {
+    ($parse_result:expr, $result:expr) => {
+        rtry_no_return!($parse_result, $result, { return $parse_result; });
+    };
+}
+
+macro_rules! rtry_no_return {
+    ($parse_result:expr, $result:expr, $error_block:block) => {
+        match $result {
+            Ok(result) => result,
+            Err(error) => {
+                $parse_result.errors.push(error.into());
+                $error_block
+            },
+        }
+    };
+}
+
 /// Trait to specify the completion values for a type.
 pub trait CompletionValues {
     /// Get the completion values for the type.
@@ -114,6 +132,35 @@ pub struct MetaData {
     /// Whether this is a special command or not.
     /// This is not applicable to settings.
     pub is_special_command: bool,
+}
+
+/// The commands and errors from parsing a config file.
+pub struct ParseResult<T> {
+    /// The parsed commands.
+    pub commands: Vec<Command<T>>,
+    /// The errors resulting from the parsing.
+    pub errors: Vec<Error>,
+}
+
+impl<T> ParseResult<T> {
+    fn new() -> Self {
+        ParseResult {
+            commands: vec![],
+            errors: vec![],
+        }
+    }
+
+    fn new_with_command(command: Command<T>) -> Self {
+        ParseResult {
+            commands: vec![command],
+            errors: vec![],
+        }
+    }
+
+    fn merge(&mut self, mut parse_result: ParseResult<T>) {
+        self.commands.append(&mut parse_result.commands);
+        self.errors.append(&mut parse_result.errors);
+    }
 }
 
 /// Trait specifying the value completions for settings.
@@ -247,7 +294,8 @@ impl<T: EnumFromStr> Parser<T> {
     }
 
     /// Parse a line.
-    fn line(&mut self, line: &str) -> Result<Vec<Command<T>>> {
+    fn line(&mut self, line: &str) -> ParseResult<T> {
+        let mut result = ParseResult::new();
         if let Some(word) = maybe_word(line) {
             let index = word.index;
             let word = word.word;
@@ -257,53 +305,54 @@ impl<T: EnumFromStr> Parser<T> {
             let (start3, end3) = word.rsplit_at(3);
             let (start5, end5) = word.rsplit_at(5);
             if word.starts_with('#') {
-                return Ok(vec![]);
+                return result;
             }
 
             if word == "include" {
-                let rest = self.get_rest(line, start_index)?;
+                let rest = rtry!(result, self.get_rest(line, start_index));
                 self.include_command(rest)
             }
             else {
                 let command =
                     if word == "set" {
-                        let rest = self.get_rest(line, start_index)?;
+                        let rest = rtry!(result, self.get_rest(line, start_index));
                         self.set_command(rest)
                     }
                     else if end3 == "map" && self.config.mapping_modes.contains(&start3) {
-                        let rest = self.get_rest(line, start_index)?;
+                        let rest = rtry!(result, self.get_rest(line, start_index));
                         self.map_command(rest, start3)
                     }
                     else if end5 == "unmap" && self.config.mapping_modes.contains(&start5) {
-                        let rest = self.get_rest(line, start_index)?;
+                        let rest = rtry!(result, self.get_rest(line, start_index));
                         self.unmap_command(rest, start5)
                     }
                     else {
                         self.custom_command(line, word, start_index, index)
                     };
-                command.map(|command| vec![command])
+                let command = rtry!(result, command);
+                ParseResult::new_with_command(command)
             }
         }
         else {
-            Ok(vec![])
+            result
         }
     }
 
     /// Parse an include command.
-    fn include_command(&mut self, line: &str) -> Result<Vec<Command<T>>> {
+    fn include_command(&mut self, line: &str) -> ParseResult<T> {
         let word = word(line);
         let index = word.index;
         let word = word.word;
         let after_index = index + word.len() + 1;
         self.column += after_index;
-        self.check_eol(line, after_index)?;
+        let mut result = ParseResult::new();
+        rtry_no_return!(result, self.check_eol(line, after_index), {});
         let path = Path::new(&self.include_path).join(word);
-        let file = File::open(&path)
-            .chain_err(|| format!("failed to open included file `{}`", path.to_string_lossy()))?;
+        let file = rtry!(result, File::open(&path)
+            .chain_err(|| format!("failed to open included file `{}`", path.to_string_lossy())));
         let buf_reader = BufReader::new(file);
-        let commands = self.parse(buf_reader)
-            .chain_err(|| format!("failed to parse included file `{}`", path.to_string_lossy()))?;
-        Ok(commands)
+        result.merge(self.parse(buf_reader));
+        result
     }
 
     /// Parse a map command.
@@ -341,28 +390,14 @@ impl<T: EnumFromStr> Parser<T> {
     }
 
     /// Parse settings.
-    pub fn parse<R: BufRead>(&mut self, input: R) -> Result<Vec<Command<T>>> {
-        let mut commands = vec![];
+    pub fn parse<R: BufRead>(&mut self, input: R) -> ParseResult<T> {
+        let mut result = ParseResult::new();
         for (line_num, input_line) in input.lines().enumerate() {
             self.line = line_num + 1;
-            let mut new_commands = self.line(&input_line?)?;
-            commands.append(&mut new_commands);
+            let input_line = rtry_no_return!(result, input_line, { continue });
+            result.merge(self.line(&input_line));
         }
-        Ok(commands)
-    }
-
-    /// Parse a single line of settings.
-    pub fn parse_line(&mut self, line: &str) -> Result<Command<T>> {
-        let mut commands = self.parse(line.as_bytes())?;
-        match commands.pop() {
-            Some(command) => Ok(command),
-            None => bail!(ErrorKind::Parse(ParseError::new(
-                        NoCommand,
-                        "comment or <end of line>".to_string(),
-                        "command".to_string(),
-                        Pos::new(self.line, self.column + line.len())
-                    )))
-        }
+        result
     }
 
     /// Parse a set command.

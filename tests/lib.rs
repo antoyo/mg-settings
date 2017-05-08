@@ -23,7 +23,7 @@ extern crate mg_settings;
 #[macro_use]
 extern crate mg_settings_macros;
 
-use mg_settings::{Config, EnumFromStr, Parser};
+use mg_settings::{Config, EnumFromStr, Parser, ParseResult};
 use mg_settings::Command::{self, App, Custom, Map, Set, Unmap};
 use mg_settings::errors::Error;
 use mg_settings::key::Key::{
@@ -57,25 +57,35 @@ use mg_settings::Value::{Bool, Float, Int, Str};
 
 use CustomCommand::*;
 
+macro_rules! _assert_error {
+    ($func:ident, $line:expr, $([$($error:expr),*]),*) => {
+        let errors = $func($line);
+        compare_errors!(errors, $([$($error),*]),*);
+    };
+}
+
 macro_rules! assert_error {
-    ($line:expr, $($error:expr),*) => {
-        let error = parse_error($line);
-        let causes = [$($error.to_string()),*];
-        let actual_causes: Vec<_> = error.iter()
-            .map(ToString::to_string)
-            .collect();
-        assert_eq!(causes, actual_causes.as_slice());
+    ($($tt:tt)*) => {
+		_assert_error!(parse_error, $($tt)*);
     };
 }
 
 macro_rules! assert_error_config {
-    ($line:expr, $($error:expr),*) => {
-        let error = parse_error_with_config($line);
-        let causes = [$($error.to_string()),*];
-        let actual_causes: Vec<_> = error.iter()
-            .map(ToString::to_string)
-            .collect();
-        assert_eq!(causes, actual_causes.as_slice());
+    ($($tt:tt)*) => {
+		_assert_error!(parse_error_with_config, $($tt)*);
+    };
+}
+
+macro_rules! compare_errors {
+    ($errors:expr, $([$($error:expr),*]),*) => {
+        let causes = [$(vec![$($error.to_string()),*]),*];
+        assert_eq!($errors.len(), causes.len());
+        for (error, causes) in $errors.iter().zip(causes.iter()) {
+            let actual_causes: Vec<_> = error.iter()
+                .map(ToString::to_string)
+                .collect();
+            assert_eq!(causes, &actual_causes);
+        }
     };
 }
 
@@ -119,59 +129,61 @@ fn custom_commands() {
 
 #[test]
 fn lexer_errors() {
-    assert_error!("$ Comment.", "unexpected $, expecting command or comment on line 1, column 1");
-}
-
-#[test]
-fn line() {
-    let mut parser = CommandParser::new();
-    assert_eq!(parser.parse_line("quit").unwrap(), Custom(Quit));
+    assert_error!("$ Comment.", ["unexpected $, expecting command or comment on line 1, column 1"]);
 }
 
 #[test]
 fn newlines() {
-    assert_error!("\n$ Comment.", "unexpected $, expecting command or comment on line 2, column 1");
-    assert_error!("\r\n$ Comment.", "unexpected $, expecting command or comment on line 2, column 1");
-    //assert_error!("\r$ Comment.", "unexpected $, expecting command or comment on line 2, column 1");
+    assert_error!("\n$ Comment.", ["unexpected $, expecting command or comment on line 2, column 1"]);
+    assert_error!("\r\n$ Comment.", ["unexpected $, expecting command or comment on line 2, column 1"]);
+    //assert_error!("\r$ Comment.", ["unexpected $, expecting command or comment on line 2, column 1"]);
 }
 
 #[test]
 fn parser_errors() {
-    assert_error!("set 5 5", "unexpected 5, expecting identifier on line 1, column 5");
-    assert_error!(" set 5 5", "unexpected 5, expecting identifier on line 1, column 6");
-    assert_error!("set  5 5", "unexpected 5, expecting identifier on line 1, column 6");
-    assert_error!("5", "unexpected 5, expecting command or comment on line 1, column 1");
-    assert_error!(" ste option1 = 42", "unexpected ste, expecting command or comment on line 1, column 2");
-    assert_error!("set option1 < 42", "unexpected <, expecting = on line 1, column 13");
-    assert_error!(" set option1 < 42", "unexpected <, expecting = on line 1, column 14");
-    assert_error!("set option1 =", "unexpected <end of line>, expecting value on line 1, column 14");
-    assert_error!("set", "unexpected <end of line>, expecting command arguments on line 1, column 4");
-    assert_error!("set option1", "unexpected <end of line>, expecting = on line 1, column 12");
-    assert_error!("include", "unexpected <end of line>, expecting command arguments on line 1, column 8");
-    assert_error_config!("nmap a", "unexpected <end of line>, expecting mapping action on line 1, column 7");
-    assert_error_config!("nmap", "unexpected <end of line>, expecting command arguments on line 1, column 5");
+    assert_error!("set 5 5", ["unexpected 5, expecting identifier on line 1, column 5"]);
+    assert_error!(" set 5 5", ["unexpected 5, expecting identifier on line 1, column 6"]);
+    assert_error!("set  5 5", ["unexpected 5, expecting identifier on line 1, column 6"]);
+    assert_error!("5", ["unexpected 5, expecting command or comment on line 1, column 1"]);
+    assert_error!(" ste option1 = 42", ["unexpected ste, expecting command or comment on line 1, column 2"]);
+    assert_error!("set option1 < 42", ["unexpected <, expecting = on line 1, column 13"]);
+    assert_error!(" set option1 < 42", ["unexpected <, expecting = on line 1, column 14"]);
+    assert_error!("set option1 =", ["unexpected <end of line>, expecting value on line 1, column 14"]);
+    assert_error!("set", ["unexpected <end of line>, expecting command arguments on line 1, column 4"]);
+    assert_error!("set option1", ["unexpected <end of line>, expecting = on line 1, column 12"]);
+    assert_error!("include", ["unexpected <end of line>, expecting command arguments on line 1, column 8"]);
+    assert_error_config!("nmap a", ["unexpected <end of line>, expecting mapping action on line 1, column 7"]);
+    assert_error_config!("nmap", ["unexpected <end of line>, expecting command arguments on line 1, column 5"]);
     assert_error_config!("nmap <C-@> :open",
-        "failed to parse keys in map command",
-        "unexpected @, expecting A-Z or special key on line 1, column 9");
+         ["failed to parse keys in map command",
+        "unexpected @, expecting A-Z or special key on line 1, column 9"]);
     assert_error_config!("nmap <C-o@> :open",
-        "failed to parse keys in map command",
-        "unexpected o@, expecting one character on line 1, column 9");
+        ["failed to parse keys in map command",
+        "unexpected o@, expecting one character on line 1, column 9"]);
     assert_error_config!("nmap <C-TE> :open",
-        "failed to parse keys in map command",
-        "unexpected TE, expecting one character on line 1, column 9");
+        ["failed to parse keys in map command",
+        "unexpected TE, expecting one character on line 1, column 9"]);
     assert_error_config!("nmap <Test> :open",
-        "failed to parse keys in map command",
-        "unexpected Test, expecting special key on line 1, column 7");
-    assert_error_config!("mmap o :open", "unexpected mmap, expecting command or comment on line 1, column 1");
-    assert_error_config!("nunmap <F1> :help", "unexpected :help, expecting <end of line> on line 1, column 13");
-    assert_error_config!("include config my-other-config", "unexpected my-other-config, expecting <end of line> on line 1, column 16");
-    assert_error!("open", "unexpected <end of line>, expecting command arguments on line 1, column 5");
+        ["failed to parse keys in map command",
+        "unexpected Test, expecting special key on line 1, column 7"]);
+    assert_error_config!("mmap o :open", ["unexpected mmap, expecting command or comment on line 1, column 1"]);
+    assert_error_config!("nunmap <F1> :help", ["unexpected :help, expecting <end of line> on line 1, column 13"]);
+    assert_error_config!("include file.conf my-other-config", ["unexpected my-other-config, expecting <end of line> on line 1, column 19"]);
+    assert_error_config!("include config my-other-config",
+        ["unexpected my-other-config, expecting <end of line> on line 1, column 16"],
+        ["failed to open included file `tests/config`",
+        "No such file or directory (os error 2)"]);
+    assert_error!("open", ["unexpected <end of line>, expecting command arguments on line 1, column 5"]);
     assert_error_config!("nmap <F1 :help",
-        "failed to parse keys in map command",
-        "unexpected (none), expecting > on line 1, column 9");
+        ["failed to parse keys in map command",
+        "unexpected (none), expecting > on line 1, column 9"]);
     assert_error_config!("nmap <F> :help",
-        "failed to parse keys in map command",
-        "unexpected F, expecting special key on line 1, column 7");
+        ["failed to parse keys in map command",
+        "unexpected F, expecting special key on line 1, column 7"]);
+    assert_error_config!("nmap\nnmap <C-@> :open",
+        ["unexpected <end of line>, expecting command arguments on line 1, column 5"],
+        ["failed to parse keys in map command",
+        "unexpected @, expecting A-Z or special key on line 2, column 9"]);
 }
 
 #[test]
@@ -259,6 +271,14 @@ fn map_command() {
     assert_eq!(parse_string_with_config("nmap <S-C-Tab> :help"),
         vec![Map { action: ":help".to_string(),
             keys: vec![Control(Box::new(Shift(Box::new(Tab))))], mode: "n".to_string() }]);
+
+    let result = parse_with_config("nmap\nnmap <C-@> :open\nnmap o :open");
+    assert_eq!(result.commands,
+        vec![Map { action: ":open".to_string(), keys: vec![Char('o')], mode: "n".to_string() }]);
+    compare_errors!(result.errors,
+        ["unexpected <end of line>, expecting command arguments on line 1, column 5"],
+        ["failed to parse keys in map command",
+        "unexpected @, expecting A-Z or special key on line 2, column 9"]);
 }
 
 #[test]
@@ -281,34 +301,39 @@ fn unmap_command() {
     assert_eq!(parse_string_with_config("nunmap <F1>"), vec![Unmap { keys: vec![F1], mode: "n".to_string() }]);
 }
 
-fn parse_error(input: &str) -> Error {
+fn parse_error(input: &str) -> Vec<Error> {
     let mut parser = CommandParser::new();
-    parser.parse(input.as_bytes()).unwrap_err()
+    parser.parse(input.as_bytes()).errors
 }
 
-fn parse_error_with_config(input: &str) -> Error {
+fn parse_error_with_config(input: &str) -> Vec<Error> {
     let mut parser = CommandParser::new_with_config(Config {
         application_commands: vec![],
         mapping_modes: vec!["n", "i", "c"],
     });
-    parser.parse(input.as_bytes(), ).unwrap_err()
+    parser.set_include_path("tests");
+    parser.parse(input.as_bytes(), ).errors
 }
 
 fn parse_string(input: &str) -> Vec<Command<CustomCommand>> {
     let mut parser = CommandParser::new();
     parser.set_include_path("tests");
-    parser.parse(input.as_bytes()).unwrap()
+    parser.parse(input.as_bytes()).commands
 }
 
 fn parse_string_no_include_path(input: &str) -> Vec<Command<CustomCommand>> {
     let mut parser = CommandParser::new();
-    parser.parse(input.as_bytes()).unwrap()
+    parser.parse(input.as_bytes()).commands
 }
 
-fn parse_string_with_config(input: &str) -> Vec<Command<CustomCommand>> {
+fn parse_with_config(input: &str) -> ParseResult<CustomCommand> {
     let mut parser = CommandParser::new_with_config(Config {
         application_commands: vec!["complete-next"],
         mapping_modes: vec!["n", "i", "c"],
     });
-    parser.parse(input.as_bytes()).unwrap()
+    parser.parse(input.as_bytes())
+}
+
+fn parse_string_with_config(input: &str) -> Vec<Command<CustomCommand>> {
+    parse_with_config(input).commands
 }
