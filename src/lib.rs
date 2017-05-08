@@ -58,12 +58,14 @@ use string::{StrExt, check_ident, maybe_word, word, words};
 use Command::*;
 use Value::*;
 
+#[macro_export]
 macro_rules! rtry {
     ($parse_result:expr, $result:expr) => {
         rtry_no_return!($parse_result, $result, { return $parse_result; });
     };
 }
 
+#[macro_export]
 macro_rules! rtry_no_return {
     ($parse_result:expr, $result:expr, $error_block:block) => {
         match $result {
@@ -143,7 +145,8 @@ pub struct ParseResult<T> {
 }
 
 impl<T> ParseResult<T> {
-    fn new() -> Self {
+    /// Create a new empty parser result.
+    pub fn new() -> Self {
         ParseResult {
             commands: vec![],
             errors: vec![],
