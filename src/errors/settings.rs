@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Boucher, Antoni <bouanto@zoho.com>
+ * Copyright (c) 2017 Boucher, Antoni <bouanto@zoho.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -19,10 +19,26 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-macro_rules! hash {
-    (<$key_type:ty, $value_type:ty> $($key:expr => $value:expr),* $(,)*) => {{
-        let mut hashmap: HashMap<$key_type, $value_type> = HashMap::new();
-        $(hashmap.insert($key, $value);)*
-        hashmap
-    }};
+//! Settings error type.
+
+quick_error! {
+    /// Error when getting/setting settings.
+    #[derive(Debug)]
+    pub enum SettingError {
+        /// Unknown setting value choice.
+        UnknownChoice(actual: String, expected: Vec<&'static str>) {
+            description("unknown choice")
+            display("unknown choice {}, expecting one of: {}", actual, expected.join(", "))
+        }
+        /// Unknown setting name.
+        UnknownSetting(name: String) {
+            description("unknown setting name")
+            display("no setting named {}", name)
+        }
+        /// Wrong value type for setting.
+        WrongType (actual: String, expected: String) {
+            description("wrong value type")
+            display("wrong value type: expecting {}, but found {}", expected, actual)
+        }
+    }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Boucher, Antoni <bouanto@zoho.com>
+ * Copyright (c) 2016-2017 Boucher, Antoni <bouanto@zoho.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -19,8 +19,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use error::{Error, ParseError, Result};
-use error::ErrorType::Parse;
+use errors::{ErrorKind, ParseError, Result};
+use errors::ErrorType::Parse;
 use position::Pos;
 
 pub trait StrExt<'a> {
@@ -61,7 +61,7 @@ pub fn check_ident(string: String, pos: &Pos) -> Result<String> {
             return Ok(string)
         }
     }
-    Err(Error::Parse(ParseError::new(Parse, string, "identifier".to_string(), pos.clone())))
+    bail!(ErrorKind::Parse(ParseError::new(Parse, string, "identifier".to_string(), pos.clone())))
 }
 
 /// Parse a single word.

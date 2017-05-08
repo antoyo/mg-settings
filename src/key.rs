@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Boucher, Antoni <bouanto@zoho.com>
+ * Copyright (c) 2016-2017 Boucher, Antoni <bouanto@zoho.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -23,8 +23,8 @@
 
 use std::fmt::{self, Display, Formatter};
 
-use error::{Error, ParseError, Result};
-use error::ErrorType::Parse;
+use errors::{ErrorKind, ParseError, Result};
+use errors::ErrorType::Parse;
 use position::Pos;
 
 use self::Key::*;
@@ -184,7 +184,7 @@ fn parse_key(input: &str, line_num: usize, column_num: usize) -> Result<(Key, us
             Some('<') => {
                 let key: String = chars.take_while(|&character| character != '>').collect();
                 if !input.contains('>') {
-                    return Err(Error::Parse(ParseError::new(
+                    bail!(ErrorKind::Parse(ParseError::new(
                         Parse,
                         "(none)".to_string(),
                         ">".to_string(),
@@ -223,7 +223,7 @@ fn parse_key(input: &str, line_num: usize, column_num: usize) -> Result<(Key, us
                                         (key_constructor(Char(character), &constructor_keys), 5)
                                     }
                                     else {
-                                        return Err(Error::Parse(ParseError::new(
+                                        bail!(ErrorKind::Parse(ParseError::new(
                                             Parse,
                                             end.to_string(),
                                             "one character".to_string(),
@@ -231,7 +231,7 @@ fn parse_key(input: &str, line_num: usize, column_num: usize) -> Result<(Key, us
                                         )));
                                     }
                                 },
-                                _ => return Err(error),
+                                _ => bail!(error),
                             }
                         },
                     }
@@ -246,7 +246,7 @@ fn parse_key(input: &str, line_num: usize, column_num: usize) -> Result<(Key, us
                     'A' ... 'Z' | 'a' ... 'z' => (Char(character), 1),
                     _ if characters.contains(character) => (Char(character), 1),
                     _ =>
-                        return Err(Error::Parse(ParseError::new(
+                        bail!(ErrorKind::Parse(ParseError::new(
                             Parse,
                             character.to_string(),
                             "key".to_string(),
@@ -304,7 +304,7 @@ fn special_key(key: &str, line_num: usize, column_num: usize, in_special_key: bo
             "Space" => (Space, 7),
             "Tab" => (Tab, 5),
             "Up" => (Up, 4),
-            _ => return Err(Error::Parse(ParseError::new(
+            _ => bail!(ErrorKind::Parse(ParseError::new(
                      Parse,
                      key.to_string(),
                      expected.to_string(),
