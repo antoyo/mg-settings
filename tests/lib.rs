@@ -194,6 +194,18 @@ fn include_command() {
 }
 
 #[test]
+fn line() {
+    let result = parse_line_with_config("nmap o :open");
+    assert_eq!(result.commands,
+        vec![Map { action: ":open".to_string(), keys: vec![Char('o')], mode: "n".to_string() }]);
+    assert!(result.errors.is_empty());
+    let result = parse_line_with_config("# nmap o :open");
+    assert!(result.commands.is_empty());
+    compare_errors!(result.errors,
+        ["unexpected comment or <end of line>, expecting command on line 1, column 1"]);
+}
+
+#[test]
 fn map_command() {
     assert_eq!(parse_string_with_config("nmap o :open"),
         vec![Map { action: ":open".to_string(), keys: vec![Char('o')], mode: "n".to_string() }]);
@@ -324,6 +336,14 @@ fn parse_string(input: &str) -> Vec<Command<CustomCommand>> {
 fn parse_string_no_include_path(input: &str) -> Vec<Command<CustomCommand>> {
     let mut parser = CommandParser::new();
     parser.parse(input.as_bytes()).commands
+}
+
+fn parse_line_with_config(input: &str) -> ParseResult<CustomCommand> {
+    let mut parser = CommandParser::new_with_config(Config {
+        application_commands: vec!["complete-next"],
+        mapping_modes: vec!["n", "i", "c"],
+    });
+    parser.parse_line(input)
 }
 
 fn parse_with_config(input: &str) -> ParseResult<CustomCommand> {
