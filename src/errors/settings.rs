@@ -23,10 +23,16 @@
 
 quick_error! {
     /// Error when getting/setting settings.
+    #[allow(missing_docs)]
     #[derive(Debug)]
     pub enum SettingError {
         /// Unknown setting value choice.
-        UnknownChoice(actual: String, expected: Vec<&'static str>) {
+        UnknownChoice {
+            // The actual value.
+            actual: String,
+            // The list of expected values.
+            expected: Vec<&'static str>
+        } {
             description("unknown choice")
             display("unknown choice {}, expecting one of: {}", actual, expected.join(", "))
         }
@@ -36,7 +42,12 @@ quick_error! {
             display("no setting named {}", name)
         }
         /// Wrong value type for setting.
-        WrongType (actual: String, expected: String) {
+        WrongType {
+            // The actual type.
+            actual: String,
+            // The expected type.
+            expected: String,
+        } {
             description("wrong value type")
             display("wrong value type: expecting {}, but found {}", expected, actual)
         }

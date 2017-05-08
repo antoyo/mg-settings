@@ -12,5 +12,8 @@ log = "^0.3.7"
 quote = "^0.3"
 syn = "^0.11"
 
+[dev-dependencies.mg-settings]
+path = ".."
+
 [lib]
 proc-macro = true

@@ -64,7 +64,7 @@ pub fn expand_setting_enum(ast: MacroInput) -> Tokens {
         fn from_str(string: &str) -> Result<Self, Self::Err> {
             match string {
                 #(#choice_names1 => Ok(#qualified_names),)*
-                _ => Err(::mg_settings::error::SettingError::UnknownChoice {
+                _ => Err(::mg_settings::errors::SettingError::UnknownChoice {
                     actual: string.to_string(),
                     expected: vec![#(#choice_names2),*],
                 }),
@@ -101,7 +101,7 @@ pub fn expand_setting_enum(ast: MacroInput) -> Tokens {
         #completion_values_impl
 
         impl ::std::str::FromStr for #name {
-            type Err = ::mg_settings::error::SettingError;
+            type Err = ::mg_settings::errors::SettingError;
 
             #from_str_fn
         }
@@ -215,7 +215,7 @@ fn to_settings_impl(name: &Ident, variant_name: &Ident, settings_struct: &Body) 
                     Ok(#capitalized_names(#variant_exprs))
                 }
                 else {
-                    Err(::mg_settings::error::SettingError::WrongType {
+                    Err(::mg_settings::errors::SettingError::WrongType {
                         actual: value.to_type().to_string(),
                         expected: #type_names.to_string(),
                     })
@@ -225,10 +225,12 @@ fn to_settings_impl(name: &Ident, variant_name: &Ident, settings_struct: &Body) 
 
         let to_variant_fn = quote! {
             #[allow(cyclomatic_complexity)]
-            fn to_variant(name: &str, value: ::mg_settings::Value) -> Result<Self::Variant, ::mg_settings::error::SettingError> {
+            fn to_variant(name: &str, value: ::mg_settings::Value)
+                -> Result<Self::Variant, ::mg_settings::errors::SettingError>
+            {
                 match name {
                     #to_variant_fn_variant
-                    _ => Err(::mg_settings::error::SettingError::UnknownSetting(name.to_string())),
+                    _ => Err(::mg_settings::errors::SettingError::UnknownSetting(name.to_string())),
                 }
             }
         };

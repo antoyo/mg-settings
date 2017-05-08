@@ -24,6 +24,7 @@
 pub mod settings;
 
 use position::Pos;
+pub use self::settings::SettingError;
 
 error_chain! {
     errors {
