@@ -14,6 +14,7 @@ syn = "^0.11"
 
 [dev-dependencies.mg-settings]
 path = ".."
+version = "^0.2"
 
 [lib]
 proc-macro = true
