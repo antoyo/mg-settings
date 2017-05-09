@@ -19,6 +19,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#![recursion_limit="128"]
+
 extern crate env_logger;
 #[macro_use]
 extern crate log;

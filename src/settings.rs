@@ -21,7 +21,7 @@
 
 //! Settings manager.
 
-use errors::settings::SettingError;
+use errors::Result;
 use super::Value;
 
 /// Settings manager.
@@ -33,5 +33,5 @@ pub trait Settings {
     fn set_value(&mut self, value: Self::Variant);
 
     /// Convert a name and value to a variant.
-    fn to_variant(name: &str, value: Value) -> Result<Self::Variant, SettingError>;
+    fn to_variant(name: &str, value: Value) -> Result<Self::Variant>;
 }

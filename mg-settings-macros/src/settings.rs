@@ -198,7 +198,10 @@ fn to_settings_impl(name: &Ident, variant_name: &Ident, settings_struct: &Body) 
             .map(|(name, typ)|
                  if is_custom_type(typ) {
                      quote! {
-                         ::std::str::FromStr::from_str(&#name)?
+                         match ::std::str::FromStr::from_str(&#name) {
+                             Ok(custom_set) => custom_set,
+                             Err(error) => return Err(::mg_settings::errors::ErrorKind::Setting(error).into()),
+                         }
                      }
                  }
                  else {
@@ -215,10 +218,12 @@ fn to_settings_impl(name: &Ident, variant_name: &Ident, settings_struct: &Body) 
                     Ok(#capitalized_names(#variant_exprs))
                 }
                 else {
-                    Err(::mg_settings::errors::SettingError::WrongType {
-                        actual: value.to_type().to_string(),
-                        expected: #type_names.to_string(),
-                    })
+                    Err(::mg_settings::errors::ErrorKind::Setting(
+                        ::mg_settings::errors::SettingError::WrongType {
+                            actual: value.to_type().to_string(),
+                            expected: #type_names.to_string(),
+                        }
+                    ).into())
                 }
             },)*
         };
@@ -226,11 +231,12 @@ fn to_settings_impl(name: &Ident, variant_name: &Ident, settings_struct: &Body) 
         let to_variant_fn = quote! {
             #[allow(cyclomatic_complexity)]
             fn to_variant(name: &str, value: ::mg_settings::Value)
-                -> Result<Self::Variant, ::mg_settings::errors::SettingError>
+                -> ::mg_settings::errors::Result<Self::Variant>
             {
                 match name {
                     #to_variant_fn_variant
-                    _ => Err(::mg_settings::errors::SettingError::UnknownSetting(name.to_string())),
+                    _ => Err(::mg_settings::errors::ErrorKind::Setting(
+                        ::mg_settings::errors::SettingError::UnknownSetting(name.to_string())).into()),
                 }
             }
         };

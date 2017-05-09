@@ -33,6 +33,11 @@ error_chain! {
             description("parse error")
             display("unexpected {}, expecting {} on {}", error.unexpected, error.expected, error.pos)
         }
+        /// Error when getting/setting settings.
+        Setting(error: SettingError) {
+            description(error.description())
+            display("{}", error)
+        }
     }
 
     foreign_links {
