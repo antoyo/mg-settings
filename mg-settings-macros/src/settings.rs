@@ -229,7 +229,7 @@ fn to_settings_impl(name: &Ident, variant_name: &Ident, settings_struct: &Body) 
         };
 
         let to_variant_fn = quote! {
-            #[allow(cyclomatic_complexity)]
+            #[allow(cyclomatic_complexity, unknown_lints)]
             fn to_variant(name: &str, value: ::mg_settings::Value)
                 -> ::mg_settings::errors::Result<Self::Variant>
             {
