@@ -145,6 +145,7 @@ pub struct ParseResult<T> {
 }
 
 impl<T> ParseResult<T> {
+    #[allow(new_without_default_derive)]
     /// Create a new empty parser result.
     pub fn new() -> Self {
         ParseResult {
@@ -218,6 +219,7 @@ pub struct Parser<T> {
 }
 
 impl<T: EnumFromStr> Parser<T> {
+    #[allow(new_without_default_derive)]
     /// Create a new parser without config.
     pub fn new() -> Self {
         Parser {
