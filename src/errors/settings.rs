@@ -21,35 +21,41 @@
 
 //! Settings error type.
 
-quick_error! {
-    /// Error when getting/setting settings.
-    #[allow(missing_docs)]
-    #[derive(Debug)]
-    pub enum SettingError {
-        /// Unknown setting value choice.
-        UnknownChoice {
-            // The actual value.
-            actual: String,
-            // The list of expected values.
-            expected: Vec<&'static str>
-        } {
-            description("unknown choice")
-            display("unknown choice {}, expecting one of: {}", actual, expected.join(", "))
-        }
-        /// Unknown setting name.
-        UnknownSetting(name: String) {
-            description("unknown setting name")
-            display("no setting named {}", name)
-        }
-        /// Wrong value type for setting.
-        WrongType {
-            // The actual type.
-            actual: String,
-            // The expected type.
-            expected: String,
-        } {
-            description("wrong value type")
-            display("wrong value type: expecting {}, but found {}", expected, actual)
+use std::fmt::{self, Display, Formatter};
+
+use self::SettingError::{UnknownChoice, UnknownSetting, WrongType};
+
+/// Error when getting/setting settings.
+#[allow(missing_docs)]
+#[derive(Debug, PartialEq)]
+pub enum SettingError {
+    /// Unknown setting value choice.
+    UnknownChoice {
+        // The actual value.
+        actual: String,
+        // The list of expected values.
+        expected: Vec<&'static str>
+    },
+    /// Unknown setting name.
+    UnknownSetting(String),
+    /// Wrong value type for setting.
+    WrongType {
+        // The actual type.
+        actual: String,
+        // The expected type.
+        expected: String,
+    },
+}
+
+impl Display for SettingError {
+    fn fmt(&self, formatter: &mut Formatter) -> fmt::Result {
+        match *self {
+            UnknownChoice { ref actual, ref expected } =>
+                write!(formatter, "unknown choice {}, expecting one of: {}", actual, expected.join(", ")),
+            UnknownSetting(ref name) =>
+                write!(formatter, "no setting named {}", name),
+            WrongType { ref actual, ref expected } =>
+                write!(formatter, "wrong value type: expecting {}, but found {}", expected, actual),
         }
     }
 }

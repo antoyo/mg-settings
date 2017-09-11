@@ -58,33 +58,30 @@ use mg_settings::Value::{Bool, Float, Int, Str};
 use CustomCommand::*;
 
 macro_rules! _assert_error {
-    ($func:ident, $line:expr, $([$($error:expr),*]),*) => {
+    ($func:ident, $line:expr, $($error:expr),*) => {
         let errors = $func($line);
-        compare_errors!(errors, $([$($error),*]),*);
+        compare_errors!(errors, [$($error),*]);
     };
 }
 
 macro_rules! assert_error {
     ($($tt:tt)*) => {
-		_assert_error!(parse_error, $($tt)*);
+        _assert_error!(parse_error, $($tt)*);
     };
 }
 
 macro_rules! assert_error_config {
     ($($tt:tt)*) => {
-		_assert_error!(parse_error_with_config, $($tt)*);
+        _assert_error!(parse_error_with_config, $($tt)*);
     };
 }
 
 macro_rules! compare_errors {
-    ($errors:expr, $([$($error:expr),*]),*) => {
-        let causes = [$(vec![$($error.to_string()),*]),*];
+    ($errors:expr, [$($error:expr),*]) => {
+        let causes = [$($error.to_string()),*];
         assert_eq!($errors.len(), causes.len());
         for (error, causes) in $errors.iter().zip(causes.iter()) {
-            let actual_causes: Vec<_> = error.iter()
-                .map(ToString::to_string)
-                .collect();
-            assert_eq!(causes, &actual_causes);
+            assert_eq!(*causes, error.to_string());
         }
     };
 }
@@ -129,61 +126,53 @@ fn custom_commands() {
 
 #[test]
 fn lexer_errors() {
-    assert_error!("$ Comment.", ["unexpected $, expecting command or comment on line 1, column 1"]);
+    assert_error!("$ Comment.", "unexpected $, expecting command or comment on line 1, column 1");
 }
 
 #[test]
 fn newlines() {
-    assert_error!("\n$ Comment.", ["unexpected $, expecting command or comment on line 2, column 1"]);
-    assert_error!("\r\n$ Comment.", ["unexpected $, expecting command or comment on line 2, column 1"]);
+    assert_error!("\n$ Comment.", "unexpected $, expecting command or comment on line 2, column 1");
+    assert_error!("\r\n$ Comment.", "unexpected $, expecting command or comment on line 2, column 1");
     //assert_error!("\r$ Comment.", ["unexpected $, expecting command or comment on line 2, column 1"]);
 }
 
 #[test]
 fn parser_errors() {
-    assert_error!("set 5 5", ["unexpected 5, expecting identifier on line 1, column 5"]);
-    assert_error!(" set 5 5", ["unexpected 5, expecting identifier on line 1, column 6"]);
-    assert_error!("set  5 5", ["unexpected 5, expecting identifier on line 1, column 6"]);
-    assert_error!("5", ["unexpected 5, expecting command or comment on line 1, column 1"]);
-    assert_error!(" ste option1 = 42", ["unexpected ste, expecting command or comment on line 1, column 2"]);
-    assert_error!("set option1 < 42", ["unexpected <, expecting = on line 1, column 13"]);
-    assert_error!(" set option1 < 42", ["unexpected <, expecting = on line 1, column 14"]);
-    assert_error!("set option1 =", ["unexpected <end of line>, expecting value on line 1, column 14"]);
-    assert_error!("set", ["unexpected <end of line>, expecting command arguments on line 1, column 4"]);
-    assert_error!("set option1", ["unexpected <end of line>, expecting = on line 1, column 12"]);
-    assert_error!("include", ["unexpected <end of line>, expecting command arguments on line 1, column 8"]);
-    assert_error_config!("nmap a", ["unexpected <end of line>, expecting mapping action on line 1, column 7"]);
-    assert_error_config!("nmap", ["unexpected <end of line>, expecting command arguments on line 1, column 5"]);
+    assert_error!("set 5 5", "unexpected 5, expecting identifier on line 1, column 5");
+    assert_error!(" set 5 5", "unexpected 5, expecting identifier on line 1, column 6");
+    assert_error!("set  5 5", "unexpected 5, expecting identifier on line 1, column 6");
+    assert_error!("5", "unexpected 5, expecting command or comment on line 1, column 1");
+    assert_error!(" ste option1 = 42", "unexpected ste, expecting command or comment on line 1, column 2");
+    assert_error!("set option1 < 42", "unexpected <, expecting = on line 1, column 13");
+    assert_error!(" set option1 < 42", "unexpected <, expecting = on line 1, column 14");
+    assert_error!("set option1 =", "unexpected <end of line>, expecting value on line 1, column 14");
+    assert_error!("set", "unexpected <end of line>, expecting command arguments on line 1, column 4");
+    assert_error!("set option1", "unexpected <end of line>, expecting = on line 1, column 12");
+    assert_error!("include", "unexpected <end of line>, expecting command arguments on line 1, column 8");
+    assert_error_config!("nmap a", "unexpected <end of line>, expecting mapping action on line 1, column 7");
+    assert_error_config!("nmap", "unexpected <end of line>, expecting command arguments on line 1, column 5");
     assert_error_config!("nmap <C-@> :open",
-         ["failed to parse keys in map command",
-        "unexpected @, expecting A-Z or special key on line 1, column 9"]);
+        "unexpected @, expecting A-Z or special key on line 1, column 9");
     assert_error_config!("nmap <C-o@> :open",
-        ["failed to parse keys in map command",
-        "unexpected o@, expecting one character on line 1, column 9"]);
+        "unexpected o@, expecting one character on line 1, column 9");
     assert_error_config!("nmap <C-TE> :open",
-        ["failed to parse keys in map command",
-        "unexpected TE, expecting one character on line 1, column 9"]);
+        "unexpected TE, expecting one character on line 1, column 9");
     assert_error_config!("nmap <Test> :open",
-        ["failed to parse keys in map command",
-        "unexpected Test, expecting special key on line 1, column 7"]);
-    assert_error_config!("mmap o :open", ["unexpected mmap, expecting command or comment on line 1, column 1"]);
-    assert_error_config!("nunmap <F1> :help", ["unexpected :help, expecting <end of line> on line 1, column 13"]);
-    assert_error_config!("include file.conf my-other-config", ["unexpected my-other-config, expecting <end of line> on line 1, column 19"]);
+        "unexpected Test, expecting special key on line 1, column 7");
+    assert_error_config!("mmap o :open", "unexpected mmap, expecting command or comment on line 1, column 1");
+    assert_error_config!("nunmap <F1> :help", "unexpected :help, expecting <end of line> on line 1, column 13");
+    assert_error_config!("include file.conf my-other-config", "unexpected my-other-config, expecting <end of line> on line 1, column 19");
     assert_error_config!("include config my-other-config",
-        ["unexpected my-other-config, expecting <end of line> on line 1, column 16"],
-        ["failed to open included file `tests/config`",
-        "No such file or directory (os error 2)"]);
-    assert_error!("open", ["unexpected <end of line>, expecting command arguments on line 1, column 5"]);
+        "unexpected my-other-config, expecting <end of line> on line 1, column 16",
+        "failed to open included file `tests/config`: No such file or directory (os error 2)");
+    assert_error!("open", "unexpected <end of line>, expecting command arguments on line 1, column 5");
     assert_error_config!("nmap <F1 :help",
-        ["failed to parse keys in map command",
-        "unexpected (none), expecting > on line 1, column 9"]);
+        "unexpected (none), expecting > on line 1, column 9");
     assert_error_config!("nmap <F> :help",
-        ["failed to parse keys in map command",
-        "unexpected F, expecting special key on line 1, column 7"]);
+        "unexpected F, expecting special key on line 1, column 7");
     assert_error_config!("nmap\nnmap <C-@> :open",
-        ["unexpected <end of line>, expecting command arguments on line 1, column 5"],
-        ["failed to parse keys in map command",
-        "unexpected @, expecting A-Z or special key on line 2, column 9"]);
+        "unexpected <end of line>, expecting command arguments on line 1, column 5",
+        "unexpected @, expecting A-Z or special key on line 2, column 9");
 }
 
 #[test]
@@ -201,8 +190,7 @@ fn line() {
     assert!(result.errors.is_empty());
     let result = parse_line_with_config("# nmap o :open");
     assert!(result.commands.is_empty());
-    compare_errors!(result.errors,
-        ["unexpected comment or <end of line>, expecting command on line 1, column 1"]);
+    compare_errors!(result.errors, ["unexpected comment or <end of line>, expecting command on line 1, column 1"]);
 }
 
 #[test]
@@ -288,8 +276,7 @@ fn map_command() {
     assert_eq!(result.commands,
         vec![Map { action: ":open".to_string(), keys: vec![Char('o')], mode: "n".to_string() }]);
     compare_errors!(result.errors,
-        ["unexpected <end of line>, expecting command arguments on line 1, column 5"],
-        ["failed to parse keys in map command",
+        ["unexpected <end of line>, expecting command arguments on line 1, column 5",
         "unexpected @, expecting A-Z or special key on line 2, column 9"]);
 }
 

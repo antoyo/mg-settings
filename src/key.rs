@@ -23,7 +23,7 @@
 
 use std::fmt::{self, Display, Formatter};
 
-use errors::{ErrorKind, ParseError, Result};
+use errors::{ParseError, Result};
 use errors::ErrorType::Parse;
 use position::Pos;
 
@@ -184,12 +184,12 @@ fn parse_key(input: &str, line_num: usize, column_num: usize) -> Result<(Key, us
             Some('<') => {
                 let key: String = chars.take_while(|&character| character != '>').collect();
                 if !input.contains('>') {
-                    bail!(ErrorKind::Parse(ParseError::new(
+                    return Err(ParseError::new(
                         Parse,
                         "(none)".to_string(),
                         ">".to_string(),
                         Pos::new(line_num, column_num + input.len())
-                    )));
+                    ));
 
                 }
                 let mut end = key.clone();
@@ -223,15 +223,15 @@ fn parse_key(input: &str, line_num: usize, column_num: usize) -> Result<(Key, us
                                         (key_constructor(Char(character), &constructor_keys), 5)
                                     }
                                     else {
-                                        bail!(ErrorKind::Parse(ParseError::new(
+                                        return Err(ParseError::new(
                                             Parse,
                                             end.to_string(),
                                             "one character".to_string(),
                                             Pos::new(line_num, column_num + 3)
-                                        )));
+                                        ));
                                     }
                                 },
-                                _ => bail!(error),
+                                _ => return Err(error),
                             }
                         },
                     }
@@ -246,12 +246,12 @@ fn parse_key(input: &str, line_num: usize, column_num: usize) -> Result<(Key, us
                     'A' ... 'Z' | 'a' ... 'z' => (Char(character), 1),
                     _ if characters.contains(character) => (Char(character), 1),
                     _ =>
-                        bail!(ErrorKind::Parse(ParseError::new(
+                        return Err(ParseError::new(
                             Parse,
                             character.to_string(),
                             "key".to_string(),
                             Pos::new(line_num, column_num)
-                        )))
+                        ))
                 }
             },
             None => unreachable!() ,
@@ -304,12 +304,12 @@ fn special_key(key: &str, line_num: usize, column_num: usize, in_special_key: bo
             "Space" => (Space, 7),
             "Tab" => (Tab, 5),
             "Up" => (Up, 4),
-            _ => bail!(ErrorKind::Parse(ParseError::new(
+            _ => return Err(ParseError::new(
                      Parse,
                      key.to_string(),
                      expected.to_string(),
                      Pos::new(line_num, column_num + 1)
-                 ))),
+                 )),
         };
     Ok(result)
 }

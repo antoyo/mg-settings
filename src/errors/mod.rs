@@ -23,26 +23,41 @@
 
 pub mod settings;
 
+use std::fmt::{self, Display, Formatter};
+use std::io;
+use std::result;
+
 use position::Pos;
 pub use self::settings::SettingError;
+use self::Error::{Msg, Parse, Setting};
 
-error_chain! {
-    errors {
-        /// Parse error.
-        Parse(error: ParseError) {
-            description("parse error")
-            display("unexpected {}, expecting {} on {}", error.unexpected, error.expected, error.pos)
-        }
-        /// Error when getting/setting settings.
-        Setting(error: SettingError) {
-            description(error.description())
-            display("{}", error)
+/// Parser result type.
+pub type Result<T> = result::Result<T, Error>;
+
+#[derive(Debug, PartialEq)]
+/// Parser or setting error.
+pub enum Error {
+    /// Other errors like input/output error.
+    Msg(String),
+    /// Parse error.
+    Parse(ParseError),
+    /// Error when getting/setting settings.
+    Setting(SettingError),
+}
+
+impl Display for Error {
+    fn fmt(&self, formatter: &mut Formatter) -> fmt::Result {
+        match *self {
+            Msg(ref msg) => write!(formatter, "{}", msg),
+            Parse(ref error) => write!(formatter, "{}", error),
+            Setting(ref error) => write!(formatter, "{}", error),
         }
     }
+}
 
-    foreign_links {
-        Io(::std::io::Error) /// Input/output error.
-        ;
+impl Into<Error> for io::Error {
+    fn into(self) -> Error {
+        Msg(self.to_string())
     }
 }
 
@@ -73,12 +88,19 @@ pub struct ParseError {
 
 impl ParseError {
     /// Create a new error.
-    pub fn new(typ: ErrorType, unexpected: String, expected: String, pos: Pos) -> ParseError {
-        ParseError {
+    #[allow(unknown_lints, new_ret_no_self)]
+    pub fn new(typ: ErrorType, unexpected: String, expected: String, pos: Pos) -> Error {
+        Error::Parse(ParseError {
             expected: expected,
             pos: pos,
             typ: typ,
             unexpected: unexpected,
-        }
+        })
+    }
+}
+
+impl Display for ParseError {
+    fn fmt(&self, formatter: &mut Formatter) -> fmt::Result {
+        write!(formatter, "unexpected {}, expecting {} on {}", self.unexpected, self.expected, self.pos)
     }
 }

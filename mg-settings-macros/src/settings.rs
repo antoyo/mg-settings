@@ -200,7 +200,7 @@ fn to_settings_impl(name: &Ident, variant_name: &Ident, settings_struct: &Body) 
                      quote! {
                          match ::std::str::FromStr::from_str(&#name) {
                              Ok(custom_set) => custom_set,
-                             Err(error) => return Err(::mg_settings::errors::ErrorKind::Setting(error).into()),
+                             Err(error) => return Err(::mg_settings::errors::Error::Setting(error)),
                          }
                      }
                  }
@@ -218,7 +218,7 @@ fn to_settings_impl(name: &Ident, variant_name: &Ident, settings_struct: &Body) 
                     Ok(#capitalized_names(#variant_exprs))
                 }
                 else {
-                    Err(::mg_settings::errors::ErrorKind::Setting(
+                    Err(::mg_settings::errors::Error::Setting(
                         ::mg_settings::errors::SettingError::WrongType {
                             actual: value.to_type().to_string(),
                             expected: #type_names.to_string(),
@@ -229,13 +229,13 @@ fn to_settings_impl(name: &Ident, variant_name: &Ident, settings_struct: &Body) 
         };
 
         let to_variant_fn = quote! {
-            #[allow(cyclomatic_complexity, unknown_lints)]
+            #[allow(unknown_lints, cyclomatic_complexity)]
             fn to_variant(name: &str, value: ::mg_settings::Value)
                 -> ::mg_settings::errors::Result<Self::Variant>
             {
                 match name {
                     #to_variant_fn_variant
-                    _ => Err(::mg_settings::errors::ErrorKind::Setting(
+                    _ => Err(::mg_settings::errors::Error::Setting(
                         ::mg_settings::errors::SettingError::UnknownSetting(name.to_string())).into()),
                 }
             }

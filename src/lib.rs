@@ -33,10 +33,8 @@
 
 #![warn(missing_docs)]
 
-#[macro_use]
-extern crate error_chain;
-
 pub mod errors;
+mod file;
 pub mod key;
 #[doc(hidden)]
 pub mod position;
@@ -44,12 +42,11 @@ pub mod settings;
 mod string;
 
 use std::collections::HashMap;
-use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::marker::PhantomData;
 use std::path::{Path, PathBuf};
 
-use errors::{Error, ErrorKind, ParseError, Result, ResultExt};
+use errors::{Error, ParseError, Result};
 use errors::ErrorType::{MissingArgument, NoCommand, Parse, UnknownCommand};
 use key::{Key, parse_keys};
 use position::Pos;
@@ -115,9 +112,11 @@ pub trait EnumFromStr
 
 /// Tre `EnumMetaData` trait is used to get associated meta-data for the enum variants.
 /// The meta-data is specified using the following attributes:
+/// ```
 /// #[completion(hidden)]
 /// #[special_command]
 /// #[help(Command help)]
+/// ```
 pub trait EnumMetaData {
     /// Get the metadata associated with the enum.
     fn get_metadata() -> HashMap<String, MetaData>;
@@ -145,7 +144,7 @@ pub struct ParseResult<T> {
 }
 
 impl<T> ParseResult<T> {
-    #[allow(new_without_default_derive)]
+    #[allow(unknown_lints, new_without_default_derive)]
     /// Create a new empty parser result.
     pub fn new() -> Self {
         ParseResult {
@@ -219,7 +218,7 @@ pub struct Parser<T> {
 }
 
 impl<T: EnumFromStr> Parser<T> {
-    #[allow(new_without_default_derive)]
+    #[allow(unknown_lints, new_without_default_derive)]
     /// Create a new parser without config.
     pub fn new() -> Self {
         Parser {
@@ -248,12 +247,12 @@ impl<T: EnumFromStr> Parser<T> {
             let rest = &line[index..];
             if let Some(word) = maybe_word(rest) {
                 let index = word.index;
-                bail!(ErrorKind::Parse(ParseError::new(
+                return Err(ParseError::new(
                     Parse,
                     rest.to_string(),
                     "<end of line>".to_string(),
                     Pos::new(self.line, self.column + index),
-                )));
+                ));
             }
         }
         Ok(())
@@ -266,7 +265,7 @@ impl<T: EnumFromStr> Parser<T> {
                 line[start_index..].trim()
             }
             else if let Ok(true) = T::has_argument(word) {
-                bail!(self.missing_args(start_index));
+                return Err(self.missing_args(start_index));
             }
             else {
                 ""
@@ -278,12 +277,12 @@ impl<T: EnumFromStr> Parser<T> {
             Ok(App(word.to_string()))
         }
         else {
-            bail!(ErrorKind::Parse(ParseError::new(
+            return Err(ParseError::new(
                 UnknownCommand,
                 word.to_string(),
                 "command or comment".to_string(),
                 Pos::new(self.line, index + 1)
-            )))
+            ))
         }
     }
 
@@ -353,8 +352,7 @@ impl<T: EnumFromStr> Parser<T> {
         let mut result = ParseResult::new();
         rtry_no_return!(result, self.check_eol(line, after_index), {});
         let path = Path::new(&self.include_path).join(word);
-        let file = rtry!(result, File::open(&path)
-            .chain_err(|| format!("failed to open included file `{}`", path.to_string_lossy())));
+        let file = rtry!(result, file::open(&path));
         let buf_reader = BufReader::new(file);
         result.merge(self.parse(buf_reader));
         result
@@ -369,29 +367,28 @@ impl<T: EnumFromStr> Parser<T> {
         if !rest.is_empty() {
             Ok(Map {
                 action: rest.to_string(),
-                keys: parse_keys(word, self.line, self.column + index)
-                    .chain_err(|| "failed to parse keys in map command")?,
+                keys: parse_keys(word, self.line, self.column + index)?,
                 mode: mode.to_string(),
             })
         }
         else {
-            bail!(ErrorKind::Parse(ParseError::new(
+            Err(ParseError::new(
                 Parse,
                 "<end of line>".to_string(),
                 "mapping action".to_string(),
                 Pos::new(self.line, self.column + line.len())
-            )))
+            ))
         }
     }
 
     /// Get an missing arguments error.
     fn missing_args(&self, column: usize) -> Error {
-        ErrorKind::Parse(ParseError::new(
+        ParseError::new(
             MissingArgument,
             "<end of line>".to_string(),
             "command arguments".to_string(),
             Pos::new(self.line, column)
-        )).into()
+        )
     }
 
     /// Parse settings.
@@ -409,12 +406,12 @@ impl<T: EnumFromStr> Parser<T> {
     pub fn parse_line(&mut self, line: &str) -> ParseResult<T> {
         let mut result = self.parse(line.as_bytes());
         if result.commands.is_empty() && result.errors.is_empty() {
-            result.errors.push(ErrorKind::Parse(ParseError::new(
+            result.errors.push(ParseError::new(
                 NoCommand,
                 "comment or <end of line>".to_string(),
                 "command".to_string(),
                 Pos::new(self.line, 1)
-            )).into());
+            ));
         }
         result
     }
@@ -434,21 +431,21 @@ impl<T: EnumFromStr> Parser<T> {
                 Ok(Set(identifier.to_string(), self.value(rest)?))
             }
             else {
-                bail!(ErrorKind::Parse(ParseError::new(
+                return Err(ParseError::new(
                     Parse,
                     operator.to_string(),
                     "=".to_string(),
                     Pos::new(self.line, self.column + operator_index)
-                )))
+                ))
             }
         }
         else {
-            bail!(ErrorKind::Parse(ParseError::new(
+            return Err(ParseError::new(
                 Parse,
                 "<end of line>".to_string(),
                 "=".to_string(),
                 Pos::new(self.line, self.column + line.len()),
-            )))
+            ))
         }
     }
 
@@ -476,12 +473,12 @@ impl<T: EnumFromStr> Parser<T> {
         let string: String = input.chars().take_while(|&character| character != '#').collect();
         let string = string.trim();
         match string {
-            "" => bail!(ErrorKind::Parse(ParseError::new(
+            "" => Err(ParseError::new(
                       Parse,
                       "<end of line>".to_string(),
                       "value".to_string(),
                       Pos::new(self.line, self.column + string.len())
-                  ))),
+                  )),
             "true" => Ok(Bool(true)),
             "false" => Ok(Bool(false)),
             _ => {

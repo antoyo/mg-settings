@@ -9,7 +9,6 @@ repository = "https://github.com/antoyo/mg-settings"
 version = "0.2.2"
 
 [dependencies]
-error-chain = "^0.10.0"
 
 [dependencies.mg-settings-macros]
 path = "mg-settings-macros"
