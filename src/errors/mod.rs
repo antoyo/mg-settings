@@ -55,6 +55,12 @@ impl Display for Error {
     }
 }
 
+impl<'a> Into<Error> for &'a str {
+    fn into(self) -> Error {
+        Msg(self.to_string())
+    }
+}
+
 impl Into<Error> for io::Error {
     fn into(self) -> Error {
         Msg(self.to_string())
