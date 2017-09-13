@@ -6,13 +6,13 @@ documentation = "https://docs.rs/mg-settings/"
 license = "MIT"
 name = "mg-settings"
 repository = "https://github.com/antoyo/mg-settings"
-version = "0.3.2"
+version = "0.4.0"
 
 [dependencies]
 
 [dependencies.mg-settings-macros]
 path = "mg-settings-macros"
-version = "^0.3.0"
+version = "^0.4.0"
 
 [features]
 nightly = []
