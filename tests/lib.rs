@@ -89,6 +89,8 @@ macro_rules! compare_errors {
 #[derive(Commands, Debug, PartialEq)]
 enum CustomCommand {
     Open(String),
+    #[count]
+    Scroll(Option<u32>),
     Quit,
     WinOpen(String),
 }
@@ -102,11 +104,11 @@ fn app_command() {
 
 #[test]
 fn commands_macro() {
-    assert_eq!(Ok(Quit), CustomCommand::create("quit", ""));
-    assert_eq!(Ok(Open("crates.io".to_string())), CustomCommand::create("open", "crates.io"));
-    assert_eq!(Ok(WinOpen("crates.io".to_string())), CustomCommand::create("win-open", "crates.io"));
-    assert_eq!(Ok(Quit), CustomCommand::create("quit", "crates.io"));
-    assert_eq!(Err("unknown command ope".to_string()), CustomCommand::create("ope", ""));
+    assert_eq!(Ok(Quit), CustomCommand::create("quit", "", None));
+    assert_eq!(Ok(Open("crates.io".to_string())), CustomCommand::create("open", "crates.io", None));
+    assert_eq!(Ok(WinOpen("crates.io".to_string())), CustomCommand::create("win-open", "crates.io", None));
+    assert_eq!(Ok(Quit), CustomCommand::create("quit", "crates.io", None));
+    assert_eq!(Err("unknown command ope".to_string()), CustomCommand::create("ope", "", None));
 }
 
 #[test]
@@ -302,7 +304,7 @@ fn unmap_command() {
 
 fn parse_error(input: &str) -> Vec<Error> {
     let mut parser = CommandParser::new();
-    parser.parse(input.as_bytes()).errors
+    parser.parse(input.as_bytes(), None).errors
 }
 
 fn parse_error_with_config(input: &str) -> Vec<Error> {
@@ -311,18 +313,18 @@ fn parse_error_with_config(input: &str) -> Vec<Error> {
         mapping_modes: vec!["n", "i", "c"],
     });
     parser.set_include_path("tests");
-    parser.parse(input.as_bytes(), ).errors
+    parser.parse(input.as_bytes(), None).errors
 }
 
 fn parse_string(input: &str) -> Vec<Command<CustomCommand>> {
     let mut parser = CommandParser::new();
     parser.set_include_path("tests");
-    parser.parse(input.as_bytes()).commands
+    parser.parse(input.as_bytes(), None).commands
 }
 
 fn parse_string_no_include_path(input: &str) -> Vec<Command<CustomCommand>> {
     let mut parser = CommandParser::new();
-    parser.parse(input.as_bytes()).commands
+    parser.parse(input.as_bytes(), None).commands
 }
 
 fn parse_line_with_config(input: &str) -> ParseResult<CustomCommand> {
@@ -330,7 +332,7 @@ fn parse_line_with_config(input: &str) -> ParseResult<CustomCommand> {
         application_commands: vec!["complete-next"],
         mapping_modes: vec!["n", "i", "c"],
     });
-    parser.parse_line(input)
+    parser.parse_line(input, None)
 }
 
 fn parse_with_config(input: &str) -> ParseResult<CustomCommand> {
@@ -338,7 +340,7 @@ fn parse_with_config(input: &str) -> ParseResult<CustomCommand> {
         application_commands: vec!["complete-next"],
         mapping_modes: vec!["n", "i", "c"],
     });
-    parser.parse(input.as_bytes())
+    parser.parse(input.as_bytes(), None)
 }
 
 fn parse_string_with_config(input: &str) -> Vec<Command<CustomCommand>> {

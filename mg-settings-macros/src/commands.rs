@@ -40,7 +40,7 @@ pub fn expand_commands_enum(mut ast: MacroInput) -> Tokens {
             let command_name = &command.name;
             let dash_name = to_dash_name(command_name);
             variant_names.push(dash_name.clone());
-            if command.has_argument {
+            if command.has_argument && !command.is_count {
                 variant_names_with_argument.push(dash_name.clone());
             }
             else {
@@ -52,7 +52,7 @@ pub fn expand_commands_enum(mut ast: MacroInput) -> Tokens {
                 if command.has_argument {
                     if command.is_count {
                         quote! {
-                            #name::#ident(#arg_ident.parse().expect("count should be a number"))
+                            #name::#ident(prefix)
                         }
                     }
                     else if command.is_optional {
@@ -87,7 +87,7 @@ pub fn expand_commands_enum(mut ast: MacroInput) -> Tokens {
     let clone = derive_clone(&ast);
     quote! {
         impl ::mg_settings::EnumFromStr for #name {
-            fn create(variant: &str, argument: &str) -> ::std::result::Result<#name, String> {
+            fn create(variant: &str, argument: &str, prefix: Option<u32>) -> ::std::result::Result<#name, String> {
                 match variant {
                     #(#variant_names => Ok(#variant_values),)*
                     _ => Err(format!("unknown command {}", variant)),

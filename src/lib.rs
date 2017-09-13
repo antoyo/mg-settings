@@ -104,7 +104,7 @@ pub trait EnumFromStr
     where Self: Sized
 {
     /// Create the enum value from the `variant` string and an `argument` string.
-    fn create(variant: &str, argument: &str) -> std::result::Result<Self, String>;
+    fn create(variant: &str, argument: &str, prefix: Option<u32>) -> std::result::Result<Self, String>;
 
     /// Check wether the enum variant has an argument.
     fn has_argument(variant: &str) -> std::result::Result<bool, String>;
@@ -259,7 +259,9 @@ impl<T: EnumFromStr> Parser<T> {
     }
 
     /// Parse a custom command or return an error if it does not exist.
-    fn custom_command(&self, line: &str, word: &str, start_index: usize, index: usize) -> Result<Command<T>> {
+    fn custom_command(&self, line: &str, word: &str, start_index: usize, index: usize, prefix: Option<u32>)
+        -> Result<Command<T>>
+    {
         let args =
             if line.len() > start_index {
                 line[start_index..].trim()
@@ -270,7 +272,7 @@ impl<T: EnumFromStr> Parser<T> {
             else {
                 ""
             };
-        if let Ok(command) = T::create(word, args) {
+        if let Ok(command) = T::create(word, args, prefix) {
             Ok(Custom(command))
         }
         else if self.config.application_commands.contains(&word) {
@@ -298,7 +300,7 @@ impl<T: EnumFromStr> Parser<T> {
     }
 
     /// Parse a line.
-    fn line(&mut self, line: &str) -> ParseResult<T> {
+    fn line(&mut self, line: &str, prefix: Option<u32>) -> ParseResult<T> {
         let mut result = ParseResult::new();
         if let Some(word) = maybe_word(line) {
             let index = word.index;
@@ -331,7 +333,7 @@ impl<T: EnumFromStr> Parser<T> {
                         self.unmap_command(rest, start5)
                     }
                     else {
-                        self.custom_command(line, word, start_index, index)
+                        self.custom_command(line, word, start_index, index, prefix)
                     };
                 let command = rtry!(result, command);
                 ParseResult::new_with_command(command)
@@ -354,7 +356,7 @@ impl<T: EnumFromStr> Parser<T> {
         let path = Path::new(&self.include_path).join(word);
         let file = rtry!(result, file::open(&path));
         let buf_reader = BufReader::new(file);
-        result.merge(self.parse(buf_reader));
+        result.merge(self.parse(buf_reader, None));
         result
     }
 
@@ -392,19 +394,19 @@ impl<T: EnumFromStr> Parser<T> {
     }
 
     /// Parse settings.
-    pub fn parse<R: BufRead>(&mut self, input: R) -> ParseResult<T> {
+    pub fn parse<R: BufRead>(&mut self, input: R, prefix: Option<u32>) -> ParseResult<T> {
         let mut result = ParseResult::new();
         for (line_num, input_line) in input.lines().enumerate() {
             self.line = line_num + 1;
             let input_line = rtry_no_return!(result, input_line, { continue });
-            result.merge(self.line(&input_line));
+            result.merge(self.line(&input_line, prefix));
         }
         result
     }
 
     /// Parse a single line of settings.
-    pub fn parse_line(&mut self, line: &str) -> ParseResult<T> {
-        let mut result = self.parse(line.as_bytes());
+    pub fn parse_line(&mut self, line: &str, prefix: Option<u32>) -> ParseResult<T> {
+        let mut result = self.parse(line.as_bytes(), prefix);
         if result.commands.is_empty() && result.errors.is_empty() {
             result.errors.push(ParseError::new(
                 NoCommand,
