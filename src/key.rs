@@ -241,7 +241,7 @@ fn parse_key(input: &str, line_num: usize, column_num: usize) -> Result<(Key, us
                 }
             },
             Some(character) => {
-                let characters = "=+-;!\"#%&()*,./<>?@[\\]^_{|}~çÇéÉàÀèÈ$";
+                let characters = "=+-;!\"'#%&()*,./<>?@[\\]^_{|}~çÇéÉàÀèÈ$";
                 match character {
                     'A' ... 'Z' | 'a' ... 'z' => (Char(character), 1),
                     _ if characters.contains(character) => (Char(character), 1),
