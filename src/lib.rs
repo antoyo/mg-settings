@@ -31,8 +31,6 @@
  * TODO: Add array type.
  */
 
-#![warn(missing_docs)]
-
 pub mod errors;
 mod file;
 pub mod key;

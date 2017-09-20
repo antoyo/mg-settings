@@ -49,55 +49,36 @@ impl ConstructorKeys {
 /// Enum representing the keys that can be used in a mapping.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Key {
-    /// Alt + another key.
     Alt(Box<Key>),
-    /// Backspace key.
     Backspace,
-    /// A single-character key.
     Char(char),
-    /// Control + another key.
     Control(Box<Key>),
-    /// Down arrow.
+    Delete,
     Down,
-    /// Enter key.
+    End,
     Enter,
-    /// Escape key.
     Escape,
-    /// Function key 1
     F1,
-    /// Function key 2
     F2,
-    /// Function key 3
     F3,
-    /// Function key 4
     F4,
-    /// Function key 5
     F5,
-    /// Function key 6
     F6,
-    /// Function key 7
     F7,
-    /// Function key 8
     F8,
-    /// Function key 9
     F9,
-    /// Function key 10
     F10,
-    /// Function key 11
     F11,
-    /// Function key 12
     F12,
-    /// Left arrow.
+    Home,
+    Insert,
     Left,
-    /// Right arrow.
+    PageDown,
+    PageUp,
     Right,
-    /// Shift + another key.
     Shift(Box<Key>),
-    /// Space key.
     Space,
-    /// Tab key.
     Tab,
-    /// Up arrow.
     Up,
 }
 
@@ -110,7 +91,9 @@ fn key_to_string(key: &Key) -> String {
             Backspace => "Backspace",
             Char(character) => return character.to_string(),
             Control(ref key) => return format!("C-{}", key_to_string(&*key)),
+            Delete => "Delete",
             Down => "Down",
+            End => "End",
             Enter => "Enter",
             Escape => "Esc",
             F1 => "F1",
@@ -125,7 +108,11 @@ fn key_to_string(key: &Key) -> String {
             F10 => "F10",
             F11 => "F11",
             F12 => "F12",
+            Home => "Home",
+            Insert => "Insert",
             Left => "Left",
+            PageDown => "PageDown",
+            PageUp => "PageUp",
             Right => "Right",
             Shift(ref key) => return format!("S-{}", key_to_string(&*key)),
             Space => "Space",
@@ -150,31 +137,22 @@ impl Display for Key {
 }
 
 fn key_constructor(key: Key, constructor_keys: &ConstructorKeys) -> Key {
+    let mut ctrl_constructor: fn(Key) -> Key = |key| key;
     if constructor_keys.control {
-        if constructor_keys.shift {
-            if constructor_keys.alt {
-                Control(Box::new(Alt(Box::new(Shift(Box::new(key))))))
-            }
-            else {
-                Control(Box::new(Shift(Box::new(key))))
-            }
-        }
-        else if constructor_keys.alt {
-            Control(Box::new(Alt(Box::new(key))))
-        }
-        else {
-            Control(Box::new(key))
-        }
+        ctrl_constructor = |key| Control(Box::new(key));
     }
-    else if constructor_keys.shift {
-        Shift(Box::new(key))
+
+    let mut shift_constructor: fn(Key) -> Key = |key| key;
+    if constructor_keys.shift {
+        shift_constructor = |key| Shift(Box::new(key));
     }
-    else if constructor_keys.alt {
-        Alt(Box::new(key))
+
+    let mut alt_constructor: fn(Key) -> Key = |key| key;
+    if constructor_keys.alt {
+        alt_constructor = |key| Alt(Box::new(key));
     }
-    else {
-        key
-    }
+
+    ctrl_constructor(alt_constructor(shift_constructor(key)))
 }
 
 fn parse_key(input: &str, line_num: usize, column_num: usize) -> Result<(Key, usize)> {
@@ -284,7 +262,9 @@ fn special_key(key: &str, line_num: usize, column_num: usize, in_special_key: bo
     let result =
         match key {
             "Backspace" => (Backspace, 11),
+            "Delete" => (Delete, 8),
             "Down" => (Down, 6),
+            "End" => (End, 5),
             "Enter" => (Enter, 7),
             "Esc" => (Escape, 5),
             "F1" => (F1, 4),
@@ -299,7 +279,11 @@ fn special_key(key: &str, line_num: usize, column_num: usize, in_special_key: bo
             "F10" => (F10, 5),
             "F11" => (F11, 5),
             "F12" => (F12, 5),
+            "Home" => (Home, 6),
+            "Insert" => (Insert, 8),
             "Left" => (Left, 6),
+            "PageDown" => (PageDown, 10),
+            "PageUp" => (PageUp, 8),
             "Right" => (Right, 7),
             "Space" => (Space, 7),
             "Tab" => (Tab, 5),
