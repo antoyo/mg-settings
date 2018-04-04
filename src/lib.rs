@@ -110,7 +110,7 @@ pub trait EnumFromStr
 
 /// Tre `EnumMetaData` trait is used to get associated meta-data for the enum variants.
 /// The meta-data is specified using the following attributes:
-/// ```
+/// ``` ignore
 /// #[completion(hidden)]
 /// #[special_command]
 /// #[help(Command help)]
