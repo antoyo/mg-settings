@@ -20,16 +20,16 @@
  */
 
 use quote::Tokens;
-use syn::{Body, Ident, MacroInput, VariantData};
+use syn::{Data, DataEnum, Fields, Ident, DeriveInput};
 
 use attributes::to_metadata_impl;
 use attributes::VariantInfo::{self, CommandInfo, SpecialCommandInfo};
 use string::to_dash_name;
 
 /// Expand the required traits for the derive Commands attribute.
-pub fn expand_commands_enum(mut ast: MacroInput) -> Tokens {
+pub fn expand_commands_enum(mut ast: DeriveInput) -> Tokens {
     let name = &ast.ident;
-    let (metadata_impl, variant_infos) = to_metadata_impl(name, &mut ast.body);
+    let (metadata_impl, variant_infos) = to_metadata_impl(name, &mut ast.data);
     let special_command_impl = to_special_command_impl(name, &variant_infos);
     let mut variant_values = vec![];
     let mut variant_names_with_argument = vec![];
@@ -46,8 +46,8 @@ pub fn expand_commands_enum(mut ast: MacroInput) -> Tokens {
             else {
                 variant_names_without_argument.push(dash_name);
             }
-            let ident = Ident::new(command_name.as_ref());
-            let arg_ident = Ident::new("argument");
+            let ident = Ident::from(command_name.as_ref());
+            let arg_ident = Ident::from("argument");
             let value =
                 if command.has_argument {
                     if command.is_count {
@@ -104,13 +104,13 @@ pub fn expand_commands_enum(mut ast: MacroInput) -> Tokens {
     }
 }
 
-fn derive_clone(ast: &MacroInput) -> Tokens {
+fn derive_clone(ast: &DeriveInput) -> Tokens {
     let name = &ast.ident;
 
-    if let Body::Enum(ref variants) = ast.body {
+    if let Data::Enum(DataEnum { ref variants, .. }) = ast.data {
         let variant_idents_values: Vec<_> = variants.iter().map(|variant| {
             let has_value =
-                if let VariantData::Tuple(_) = variant.data {
+                if let Fields::Unnamed(_) = variant.fields {
                     true
                 }
                 else {
@@ -169,7 +169,7 @@ fn to_special_command_impl(name: &Ident, variant_infos: &[VariantInfo]) -> Token
             if command.incremental {
                 incremental_identifiers.push(identifier);
             }
-            let command = Ident::new(command.name.as_ref());
+            let command = Ident::from(command.name.as_ref());
             to_commands.push(quote! {
                 #identifier => Ok(#name::#command(input.to_string())),
             });

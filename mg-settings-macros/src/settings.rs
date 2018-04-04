@@ -20,28 +20,28 @@
  */
 
 use quote::Tokens;
-use syn::{Attribute, Body, Ident, MacroInput, Path, VariantData};
-use syn::Body::{Enum, Struct};
-use syn::MetaItem::{List, Word};
-use syn::NestedMetaItem::MetaItem;
-use syn::Ty;
+use syn::{Data, DataEnum, DataStruct, Ident, DeriveInput};
+use syn::Data::{Enum, Struct};
+use syn::Meta::{List, Word};
+use syn::NestedMeta::Meta;
+use syn::{MetaList, Type, TypePath, Fields};
 
 use attributes::to_metadata_impl;
 use string::{snake_to_camel, to_dash_name};
 
 /// Expand the required trais for the derive Setting attribute.
-pub fn expand_setting_enum(ast: MacroInput) -> Tokens {
+pub fn expand_setting_enum(ast: DeriveInput) -> Tokens {
     let name = ast.ident.clone();
     let mut default = None;
 
     let mut variant_names = vec![];
-    if let Enum(ref variants) = ast.body {
+    if let Enum(DataEnum{ ref variants, .. }) = ast.data {
         for variant in variants {
             variant_names.push(variant.ident.clone());
             if !variant.attrs.is_empty() {
                 for attribute in &variant.attrs {
-                    if let &Attribute { value: Word(ref ident), .. } = attribute {
-                        if ident == "default" {
+                    if let Some(Word(ref ident)) = attribute.interpret_meta() {
+                        if ident.as_ref() == "default" {
                             default = Some(variant.ident.clone());
                         }
                     }
@@ -109,13 +109,13 @@ pub fn expand_setting_enum(ast: MacroInput) -> Tokens {
 }
 
 /// Expand the required traits for the derive Settings attribute.
-pub fn expand_settings_enum(ast: MacroInput) -> Tokens {
+pub fn expand_settings_enum(ast: DeriveInput) -> Tokens {
     let name = &ast.ident;
-    let completion_fn = to_setting_completion_fn(name, &ast.body);
-    let variant_name = Ident::new(format!("{}Variant", name));
-    let variant_enum = to_enums(&variant_name, &ast.body);
-    let settings_impl = to_settings_impl(name, &variant_name, &ast.body);
-    let (metadata_impl, _) = to_metadata_impl(name, &ast.body);
+    let completion_fn = to_setting_completion_fn(name, &ast.data);
+    let variant_name = Ident::from(format!("{}Variant", name));
+    let variant_enum = to_enums(&variant_name, &ast.data);
+    let settings_impl = to_settings_impl(name, &variant_name, &ast.data);
+    let (metadata_impl, _) = to_metadata_impl(name, &ast.data);
     quote! {
         #variant_enum
 
@@ -136,15 +136,15 @@ fn is_custom_type(ident: &Ident) -> bool {
 }
 
 /// Create the variant enums for getters and setters.
-fn to_enums(variant_name: &Ident, settings_struct: &Body) -> Tokens {
-    if let &Struct(VariantData::Struct(ref strct)) = settings_struct {
+fn to_enums(variant_name: &Ident, settings_struct: &Data) -> Tokens {
+    if let &Struct(DataStruct { fields: Fields::Named(ref fields), .. }) = settings_struct {
         let mut field_names = vec![];
         let mut names = vec![];
         let mut types = vec![];
-        for field in strct {
+        for field in &fields.named {
             if let Some(ref ident) = field.ident {
                 field_names.push(ident);
-                let ident = Ident::new(snake_to_camel(&ident.to_string()));
+                let ident = Ident::from(snake_to_camel(&ident.to_string()));
                 names.push(ident);
                 types.push(field.ty.clone());
             }
@@ -163,26 +163,26 @@ fn to_enums(variant_name: &Ident, settings_struct: &Body) -> Tokens {
 }
 
 /// Create the impl Settings.
-fn to_settings_impl(name: &Ident, variant_name: &Ident, settings_struct: &Body) -> Tokens {
-    if let &Struct(VariantData::Struct(ref strct)) = settings_struct {
+fn to_settings_impl(name: &Ident, variant_name: &Ident, settings_struct: &Data) -> Tokens {
+    if let &Struct(DataStruct { fields: Fields::Named(ref fields), .. }) = settings_struct {
         let mut names = vec![];
         let mut capitalized_names = vec![];
         let mut original_types = vec![];
         let mut types = vec![];
-        for field in strct {
+        for field in &fields.named {
             if let Some(ref ident) = field.ident {
                 let ident_string = ident.to_string();
-                let ident = Ident::new(ident_string.clone());
+                let ident = Ident::from(ident_string.clone());
                 names.push(ident);
-                let ident = Ident::new(snake_to_camel(&ident_string));
+                let ident = Ident::from(snake_to_camel(&ident_string));
                 capitalized_names.push(
                     quote! {
                         #variant_name::#ident
                     });
 
-                if let Ty::Path(_, Path { ref segments, .. }) = field.ty {
-                    original_types.push(&segments[0].ident);
-                    types.push(to_value_type(&segments[0].ident));
+                if let Type::Path(TypePath { ref path, .. }) = field.ty {
+                    original_types.push(&path.segments[0].ident);
+                    types.push(to_value_type(&path.segments[0].ident));
                 }
             }
         }
@@ -263,15 +263,15 @@ fn to_settings_impl(name: &Ident, variant_name: &Ident, settings_struct: &Body) 
 }
 
 /// Create the function returning the completion of the setting values.
-pub fn to_setting_completion_fn(name: &Ident, body: &Body) -> Tokens {
+pub fn to_setting_completion_fn(name: &Ident, body: &Data) -> Tokens {
     let mut completions = vec![];
-    if let Struct(VariantData::Struct(ref fields)) = *body {
+    if let Struct(DataStruct { fields: Fields::Named(ref fields), .. }) = *body {
         'field_loop:
-        for field in fields {
+        for field in &fields.named {
             for attribute in &field.attrs {
-                if let &Attribute { value: List(ref ident, ref args), .. } = attribute {
-                    if ident == "completion" {
-                        if let MetaItem(Word(ref arg_ident)) = args[0] {
+                if let Some(List(MetaList { ref ident, ref nested, .. })) = attribute.interpret_meta() {
+                    if ident.as_ref() == "completion" {
+                        if let Meta(Word(ref arg_ident)) = nested[0] {
                             if arg_ident == "hidden" {
                                 continue 'field_loop;
                             }
@@ -311,7 +311,7 @@ fn to_value_type(ident: &Ident) -> Ident {
             "i64" => "Int",
             _ => "Str",
         };
-    Ident::new(value_type)
+    Ident::from(value_type)
 }
 
 /// Convert a `Value` type to a string representation of the type.

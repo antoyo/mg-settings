@@ -35,55 +35,51 @@ mod settings;
 mod string;
 
 use std::env;
+use std::io::Write;
 
-use env_logger::LogBuilder;
-use log::LogRecord;
+use env_logger::Builder;
 use proc_macro::TokenStream;
 
 use commands::expand_commands_enum;
 use settings::{expand_setting_enum, expand_settings_enum};
 
 fn init_logger() {
-    let format = |record: &LogRecord| {
-        record.args().to_string()
-    };
-    let mut builder = LogBuilder::new();
-    builder.format(format);
+    let mut builder = Builder::new();
+    builder.format(|buf, record| {
+        writeln!(buf, "{}", record.args())
+    });
     if let Ok(rust_log) = env::var("RUST_LOG") {
         builder.parse(&rust_log);
     }
-    builder.init().ok();
+    builder.init();
 }
 
 #[proc_macro_derive(Commands, attributes(completion, count, help, special_command))]
 /// Derive Commands.
 pub fn commands(input: TokenStream) -> TokenStream {
     init_logger();
-    let source = input.to_string();
-    let ast = syn::parse_macro_input(&source).unwrap();
+    let ast = syn::parse(input).unwrap();
     let expanded = expand_commands_enum(ast);
-    warn!("{}", expanded.parse::<String>().unwrap());
-    expanded.to_string().parse().unwrap()
+    warn!("{}", expanded.to_string());
+    expanded.into()
 }
 
 #[proc_macro_derive(Setting, attributes(default))]
 /// Derive Setting.
 pub fn setting(input: TokenStream) -> TokenStream {
     init_logger();
-    let source = input.to_string();
-    let ast = syn::parse_macro_input(&source).unwrap();
+    let ast = syn::parse(input).unwrap();
     let expanded = expand_setting_enum(ast);
-    warn!("{}", expanded.parse::<String>().unwrap());
-    expanded.to_string().parse().unwrap()
+    warn!("{}", expanded.to_string());
+    expanded.into()
 }
 
 #[proc_macro_derive(Settings, attributes(help))]
 /// Derive Settings.
 pub fn settings(input: TokenStream) -> TokenStream {
     init_logger();
-    let source = input.to_string();
-    let ast = syn::parse_macro_input(&source).unwrap();
+    let ast = syn::parse(input).unwrap();
     let expanded = expand_settings_enum(ast);
-    warn!("{}", expanded.parse::<String>().unwrap());
-    expanded.to_string().parse().unwrap()
+    warn!("{}", expanded.to_string());
+    expanded.into()
 }
