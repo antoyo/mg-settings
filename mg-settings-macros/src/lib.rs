@@ -51,7 +51,7 @@ fn init_logger() {
     if let Ok(rust_log) = env::var("RUST_LOG") {
         builder.parse(&rust_log);
     }
-    builder.init();
+    builder.try_init();
 }
 
 #[proc_macro_derive(Commands, attributes(completion, count, help, special_command))]
