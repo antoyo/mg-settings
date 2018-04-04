@@ -35,24 +35,23 @@ mod settings;
 mod string;
 
 use std::env;
+use std::io::Write;
 
-use env_logger::LogBuilder;
-use log::LogRecord;
+use env_logger::Builder;
 use proc_macro::TokenStream;
 
 use commands::expand_commands_enum;
 use settings::{expand_setting_enum, expand_settings_enum};
 
 fn init_logger() {
-    let format = |record: &LogRecord| {
-        record.args().to_string()
-    };
-    let mut builder = LogBuilder::new();
-    builder.format(format);
+    let mut builder = Builder::new();
+    builder.format(|buf, record| {
+        writeln!(buf, "{}", record.args())
+    });
     if let Ok(rust_log) = env::var("RUST_LOG") {
         builder.parse(&rust_log);
     }
-    builder.init().ok();
+    builder.init();
 }
 
 #[proc_macro_derive(Commands, attributes(completion, count, help, special_command))]
