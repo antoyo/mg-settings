@@ -21,13 +21,14 @@
 
 use quote::Tokens;
 use syn;
-use syn::{Attribute, Body, Field, Ident, Variant};
-use syn::Body::{Enum, Struct};
+use syn::{Attribute, Data, DataEnum, DataStruct, Field, Ident, Variant};
+use syn::{MetaList, MetaNameValue};
+use syn::Data::{Enum, Struct};
 use syn::Lit::Str;
-use syn::MetaItem::{List, NameValue, Word};
-use syn::NestedMetaItem::MetaItem;
-use syn::Ty::Path;
-use syn::VariantData::{self, Unit};
+use syn::Meta::{List, NameValue, Word};
+use syn::NestedMeta::Meta;
+use syn::Type::Path;
+use syn::Fields;
 
 use self::VariantInfo::{CommandInfo, SpecialCommandInfo};
 use string::to_dash_name;
@@ -36,21 +37,21 @@ fn collect_attrs(name: &str, attrs: &[Attribute], hidden: &mut bool, description
     -> Option<VariantInfo>
 {
     for attribute in attrs {
-        match *attribute {
-            Attribute { value: List(ref ident, ref args), .. } => {
+        match attribute.interpret_meta() {
+            Some(List(MetaList { ref ident, ref nested, .. })) => {
                 match ident.as_ref() {
                     "completion" => {
-                        if let MetaItem(Word(ref arg_ident)) = args[0] {
+                        if let Meta(Word(ref arg_ident)) = nested[0] {
                             if arg_ident == "hidden" {
                                 *hidden = true;
                             }
                         }
                     },
                     "help" => {
-                        if let MetaItem(NameValue(ref arg_ident, ref value)) = args[0] {
-                            if arg_ident == "text" {
-                                if let Str(ref desc, _) = *value {
-                                    *description = desc.clone();
+                        if let Meta(NameValue(MetaNameValue { ref ident, ref lit, .. })) = nested[0] {
+                            if ident.as_ref() == "text" {
+                                if let Str(ref desc) = *lit {
+                                    *description = desc.value();
                                 }
                             }
                         }
@@ -58,18 +59,18 @@ fn collect_attrs(name: &str, attrs: &[Attribute], hidden: &mut bool, description
                     "special_command" => {
                         let mut incremental = false;
                         let mut identifier = None;
-                        for arg in args {
-                            if let MetaItem(ref meta_item) = *arg {
+                        for arg in nested {
+                            if let Meta(ref meta_item) = *arg {
                                 match *meta_item {
                                     Word(ref ident) => {
                                         if ident == "incremental" {
                                             incremental = true;
                                         }
                                     },
-                                    NameValue(ref ident, ref value) => {
-                                        if ident == "identifier" {
-                                            if let Str(ref string, _) = *value {
-                                                identifier = Some(string.chars().next()
+                                    NameValue(MetaNameValue { ref ident, ref lit, .. }) => {
+                                        if ident.as_ref() == "identifier" {
+                                            if let Str(ref string) = *lit {
+                                                identifier = Some(string.value().chars().next()
                                                                   .expect("identifier should be one character"));
                                             }
                                         }
@@ -87,8 +88,8 @@ fn collect_attrs(name: &str, attrs: &[Attribute], hidden: &mut bool, description
                     _ => (),
                 }
             },
-            Attribute { value: Word(ref ident), .. } => {
-                if ident == "count" {
+            Some(Word(ref ident)) => {
+                if ident.as_ref() == "count" {
                     *is_count = true;
                 }
             },
@@ -100,11 +101,11 @@ fn collect_attrs(name: &str, attrs: &[Attribute], hidden: &mut bool, description
 
 fn collect_and_transform_variant(variant: &Variant) -> VariantInfo {
     let mut command = Command::new();
-    command.has_argument = variant.data != Unit;
+    command.has_argument = variant.fields != Fields::Unit;
     command.name = variant.ident.to_string();
-    if let VariantData::Tuple(ref fields) = variant.data {
-        if let Path(_, syn::Path { ref segments, .. }) = fields[0].ty {
-            command.is_optional = segments[0].ident == "Option";
+    if let Fields::Unnamed(ref fields) = variant.fields {
+        if let Path(syn::TypePath { ref path, .. }) = fields.unnamed[0].ty {
+            command.is_optional = path.segments[0].ident.as_ref() == "Option";
         }
     }
     if let Some(special_command) = collect_attrs(&command.name, &variant.attrs, &mut command.hidden,
@@ -168,7 +169,7 @@ pub enum VariantInfo {
 }
 
 /// Create the EnumMetaData impl.
-pub fn to_metadata_impl(name: &Ident, body: &Body) -> (Tokens, Vec<VariantInfo>) {
+pub fn to_metadata_impl(name: &Ident, body: &Data) -> (Tokens, Vec<VariantInfo>) {
     let variant_infos = transform_enum(body);
     let tokens = {
         let metadata = variant_infos.iter()
@@ -202,15 +203,15 @@ pub fn to_metadata_impl(name: &Ident, body: &Body) -> (Tokens, Vec<VariantInfo>)
 }
 
 /// Remove the attributes from the variants and return the metadata gathered from the attributes.
-pub fn transform_enum(item: &Body) -> Vec<VariantInfo> {
+pub fn transform_enum(item: &Data) -> Vec<VariantInfo> {
     let mut variant_infos = vec![];
     match *item {
-        Enum(ref variants) => {
+        Enum(DataEnum{ ref variants, .. }) => {
             for variant in variants {
                 variant_infos.push(collect_and_transform_variant(variant));
             }
         },
-        Struct(VariantData::Struct(ref fields)) => {
+        Struct(DataStruct { ref fields, .. }) => {
             for field in fields {
                 variant_infos.push(collect_and_transform_field(field));
             }

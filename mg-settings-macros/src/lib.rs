@@ -59,31 +59,28 @@ fn init_logger() {
 /// Derive Commands.
 pub fn commands(input: TokenStream) -> TokenStream {
     init_logger();
-    let source = input.to_string();
-    let ast = syn::parse_macro_input(&source).unwrap();
+    let ast = syn::parse(input).unwrap();
     let expanded = expand_commands_enum(ast);
-    warn!("{}", expanded.parse::<String>().unwrap());
-    expanded.to_string().parse().unwrap()
+    warn!("{}", expanded.to_string());
+    expanded.into()
 }
 
 #[proc_macro_derive(Setting, attributes(default))]
 /// Derive Setting.
 pub fn setting(input: TokenStream) -> TokenStream {
     init_logger();
-    let source = input.to_string();
-    let ast = syn::parse_macro_input(&source).unwrap();
+    let ast = syn::parse(input).unwrap();
     let expanded = expand_setting_enum(ast);
-    warn!("{}", expanded.parse::<String>().unwrap());
-    expanded.to_string().parse().unwrap()
+    warn!("{}", expanded.to_string());
+    expanded.into()
 }
 
 #[proc_macro_derive(Settings, attributes(help))]
 /// Derive Settings.
 pub fn settings(input: TokenStream) -> TokenStream {
     init_logger();
-    let source = input.to_string();
-    let ast = syn::parse_macro_input(&source).unwrap();
+    let ast = syn::parse(input).unwrap();
     let expanded = expand_settings_enum(ast);
-    warn!("{}", expanded.parse::<String>().unwrap());
-    expanded.to_string().parse().unwrap()
+    warn!("{}", expanded.to_string());
+    expanded.into()
 }
